@@ -1,0 +1,94 @@
+<html>
+    <head> 
+        <title>IOTmize Location Service</title>
+        <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+        <script type="text/javascript">
+        	
+            var putLocation = function(){
+            
+            	
+            	console.log($(location).attr('href'));
+	            var icon="http://www.openstreetmap.org/openlayers/img/marker.png";
+	            map = new OpenLayers.Map("map");
+	            
+	            var mapnik = new OpenLayers.Layer.OSM();
+		        var zoom           = 15;
+	        	var markers = new OpenLayers.Layer.Markers("Markers");
+				var fromProjection = new OpenLayers.Projection("EPSG:4326");   // Transform from WGS 1984
+	        	var toProjection   = new OpenLayers.Projection("EPSG:900913"); // to Spherical Mercator Projection
+	        	var position = new OpenLayers.LonLat(<%=lon%>,<%=lat%>).transform( fromProjection, toProjection);
+				var markerIcon = new OpenLayers.Icon(icon);
+        		var marker = new OpenLayers.Marker(position, markerIcon);  
+        		marker.map = map;       
+				markers.addMarker(marker);
+		        map.addLayer(mapnik);
+		        map.setCenter(position, zoom );
+		        map.addLayer(markers);
+	            
+				window.setInterval (function () {
+				    $.ajax({
+				        url:'getUpdatedLocation?token='+getUrlParameter('token')+'&deviceId='+getUrlParameter('deviceId'),
+				        type:"GET",
+				        cache: false,
+				        async: false,
+				        success:function(response) {
+				        	if(response.lat != undefined){
+				        		var newLonLat = new OpenLayers.LonLat(response.lon,response.lat).transform(new OpenLayers.Projection("EPSG:4326"), map.getProjectionObject());;
+								var newPx = marker.map.getLayerPxFromLonLat(newLonLat);
+								marker.moveTo(newPx);
+								marker.map.panTo(newLonLat);
+				        	}
+				        	else
+				        		$('#map').html(response.msg);
+		                    	 
+				
+				        }, error:function() {
+				            console.log("Connection Failed");
+				        }
+				    });
+				}, 10000);
+			}
+			
+			var getUrlParameter = function getUrlParameter(sParam) {
+			    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+			        sURLVariables = sPageURL.split('&'),
+			        sParameterName,
+			        i;
+			
+			    for (i = 0; i < sURLVariables.length; i++) {
+			        sParameterName = sURLVariables[i].split('=');
+			
+			        if (sParameterName[0] === sParam) {
+			            return sParameterName[1] === undefined ? true : sParameterName[1];
+			        }
+			    }
+			};
+        window.onload= putLocation;    	
+        </script>
+    </head>
+    <body>
+    	 
+    	<div style="width: 100%; height: 60px;">
+    	<table width="100%">
+    		<tr>
+    		<td  width="30%"><a align="left" href="http://www.iotmize.com/index.html"><img src="http://www.iotmize.com/assets/img/IOTmize _130616_v5.png" alt="" height="80" width="130"></a></td>
+    			<td width="70%"><h2 align="left">Welcome to IOTmize Location Tracking Service</h2></td>
+    			
+    		</tr>
+		</table>
+		</div>
+    	<div style="width: 100%; height: 25px; border-bottom: 1px solid black; text-align: center">
+		  <span style="font-size: 20px; background-color: #F3F5F6; padding: 0 10px;">
+		    Check Location In Below Map
+		  </span>
+		</div>
+        <div id="map" style="width:100%;height:90%;">
+        </div>
+       <hr size="2">
+		<div >
+			<p align="center">Powered By <b>Nexgensis technologies pvt ltd</b>. All Rights Reserved. <a href="http://www.iotmize.com/index.html">IOTmize website</a>.
+		</div>
+	
+    </body>
+</html>

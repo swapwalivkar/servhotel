@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<title>Warehouse Management</title>
+<link href="css/bootstrap.min.css" rel="stylesheet" />
+<!--  <link href="css/main-app.css" rel="stylesheet" /> -->
+<link href="css/jquery-ui.min.css" rel="stylesheet" />
+<link href="css/bootstrap-horizon.css" rel="stylesheet">
+<link href="css/nv.d3.min.css" rel="stylesheet">
+<link href="css/metisMenu.min.css" rel="stylesheet">
+<link href="css/sb-admin-2.css" rel="stylesheet">
+<link href="css/timeline.css" rel="stylesheet">
+<link href="css/morris.css" rel="stylesheet">
+<link href="css/fontawesome/font-awesome.min.css" rel="stylesheet"
+	type="text/css">
+	<link rel="stylesheet" type="text/css" href="css/dataTables.jqueryui.min.css"/>
+<script type="text/javascript" src="js/libs/load.min.js"></script>
+<script type="text/javascript"
+	src="js/libs/underscore/underscore-min.js"></script>
+<script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="js/libs/bootstrap/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="css/jquery.dataTables.min.css" />
+<script src="js/jquery.dataTables.min.js"></script>
+<script src="js/printThis.js"></script>
+
+
+<script>
+	var menus;
+	var off_cust = '';
+	var off_prod = '';
+	var offers;
+	var host_url;
+	$(function($window) {
+		if(localStorage.getItem('token') == undefined){
+			window.location.href='login.html';
+		}
+
+		host_url = localStorage.getItem('host-url');
+		$('#printLedgerRecord').hide();
+		$('#print_expense').hide();
+		getOrders($window);
+		$('#neworder').click(function(){
+		window.location.href='neworder.html';
+		});
+		getCustomers($window);
+		$('#newcust').click(function(){
+		window.location.href='newCust.html';
+		});
+		getMenu($window);
+		$('#newmenu').click(function(){
+		window.location.href='newMenu.html';
+		});
+		$('#newexpense').click(function(){
+		window.location.href='newExpense.html';
+		});
+		getOffers($window);
+		getCustomersForOffer($window);
+		getMenuForOffer($window);
+		getBalanceSheetDetails($window);
+		getCanDetails($window);
+		getAllExpenses($window);
+		getExpenseType();
+		$('#logout').click(function(){
+			localStorage.removeItem('token');
+			window.location.href='login.html';
+		});
+		
+		$('#sel_prod').change(function() {	
+			var data = {'customer_id':$('#sel_cust').val(),'product_id':$('#sel_prod').val()}
+			getOffersForCustomer(data);
+			for(var key in menus) {
+				if($(this).val() == menus[key].product_id){
+					$('#base_price').val(menus[key].base_price);	
+				}	
+			}				
+		});
+		$('#sel_cust').change(function() {	
+			var data = {'customer_id':$('#sel_cust').val(),'product_id':$('#sel_prod').val()}
+			getOffersForCustomer(data);
+			for(var key in menus) {
+				if($("#sel_prod").val() == menus[key].product_id){
+					$('#base_price').val(menus[key].base_price);	
+				}	
+			}							
+		});
+		$('#addOffer').click(function(e){
+			
+			var cust = $('#sel_cust').val();
+			var prod = $('#sel_prod').val();
+			var offerPrice = $('#offer_price').val();
+			var offerData = {};
+			
+			offerData['access_token'] = localStorage.getItem('token');
+			offerData['customer_id'] = cust;
+			offerData['product_id'] = prod;
+			offerData['offer_price'] = offerPrice;
+			
+			addOffer(offerData);
+		});
+		$('#getLedgerRecord').click(function(e){
+			$("#ledger_table").find('tbody').empty();
+			$("#ledger_bs_table").find('tbody').empty();
+			var from_date = $('#from_date').val();
+			var to_date = $('#to_date').val();
+			var cust = $('#ledg_sel_cust').val();
+			
+			
+			if(from_date == ''){
+				alert('Please Select From Date');
+				return false;
+			}else if(to_date == ''){
+				alert('Please Select To Date');
+				return false;
+			}else if(from_date > to_date){
+				alert('From Date cannot be greater than To Date');
+				return false;
+			}
+
+			var customer_id = $('#ledg_sel_cust').val();
+			var filderData = {};
+			
+			filderData['access_token'] = localStorage.getItem('token');
+			filderData['from_date'] = from_date;
+			filderData['to_date'] = to_date;
+			filderData['customer_id'] = customer_id;
+			
+
+			getLedgerDetails(filderData);
+			
+		});
+		$('#getExpensesRecords').click(function(e){
+			var from_date = $('#from_date_exp').val();
+			var to_date = $('#to_date_exp').val();
+			var exp = $('#expense_name').val();
+			
+			
+			if(from_date == ''){
+				alert('Please Select From Date');
+				return false;
+			}else if(to_date == ''){
+				alert('Please Select To Date');
+				return false;
+			}else if(from_date > to_date){
+				alert('From Date cannot be greater than To Date');
+				return false;
+			}
+			$("#expense_table").find('tbody').empty();
+			var customer_id = $('#ledg_sel_cust').val();
+			var filderData = {};
+			
+			filderData['access_token'] = localStorage.getItem('token');
+			filderData['from_date'] = from_date;
+			filderData['to_date'] = to_date;
+			filderData['expense_name'] = exp;
+			
+
+			getExpenseDetails(filderData);
+			
+		});
+		$('#printLedgerRecord').click(function(e){
+			printRecord('#6');
+		});	
+		$('#reset').click(function(e){
+			$( "#from_date" ).val('');
+			$( "#to_date" ).val('');
+			$( "#ledg_sel_cust" ).val('none');
+			$( "#ledger_table" ).find('tbody').empty();
+			$( "#ledger_bs_table" ).find('tbody').empty();
+		});	
+		$('#reset_expense').click(function(e){
+			$( "#from_date_exp" ).val('');
+			$( "#to_date_exp" ).val('');
+			$( "#expense_name" ).val('none');
+			$( "#expense_table" ).find('tbody').empty();
+			$( "#expense_record" ).find('tbody').empty();
+		});	
+		
+		$('#print_expense').click(function(e){
+			printRecord('#7');
+		});	
+	});
+	
+	function editOrder(id){
+		window.location.href='editorder.html?id='+id;
+	}
+	function editMenu(id){
+		window.location.href='editMenu.html?id='+id;
+	}
+	function editCust(id){
+		window.location.href='editCustomer.html?id='+id;
+	}
+	function editBSheet(id){
+		window.location.href='balanceSheet.html?id='+id;
+	}
+	function editCanRecord(id){
+		window.location.href='canRecord.html?id='+id;
+	}
+	function editExpense(id){
+		window.location.href='editExpense.html?id='+id;
+	}
+	function getParameterByName(name) {
+		var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+		return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+	}
+	function getOrders($window){
+		
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/order/getOrders",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+                 
+				 if(data.orders.length > 0){
+					for(var key in data.orders) {
+						$("#orders_table")
+						.append('<tr><td><a href="javascript:editOrder('+data.orders[key].order_id+');">'+data.orders[key].order_id+'</a></td><td>'+data.orders[key].order_date+'</td><td>'+data.orders[key].name +'</td><td>'+data.orders[key].contact_no+'</td><td>'+data.orders[key].address+'</td><td>'+data.orders[key].total_price+'</td><td>'+data.orders[key].tran_cost+'</td><td>'+data.orders[key].pckg_cost+'</td><td>'+data.orders[key].discount+'</td><td>'+data.orders[key].gst+'</td><td>'+data.orders[key].grand_total+'</td><td>'+data.orders[key].delivery_status+'</td></tr>');
+					}
+				 }else{
+					$("#orders_table").find('tbody')
+					.append('<tr><td colspan="9">Currently No Running Orders. Please Add new order.</td></tr>');
+				 }
+				 $('#orders_table').DataTable();				  
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 $("#orders_table").find('tbody')
+					.append('<tr><td colspan="9">Error Occurred while fetching orders</td></tr>');
+             }
+		  });
+		  
+    }
+	function getMenu($window){
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/menu/getMenu",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},			
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+                 
+				 if(data.menu.length > 0){
+					for(var key in data.menu) {
+					 $("#menu_table").find('tbody')
+					.append('<tr><td><a href="javascript:editMenu('+data.menu[key].product_id+');">'+data.menu[key].product_id+'</a></td><td>'+data.menu[key].product_name +'</td><td>'+data.menu[key].product_category+'</td><td>'+data.menu[key].base_price+'</td><td>'+data.menu[key].prod_pckg_style+'</td></tr>');
+				}
+				 }else{
+					$("#menu_table").find('tbody')
+					.append('<tr><td colspan="8">Currently Menu Not Available. Please Add Menu..</td></tr>');
+				 }
+				 $('#menu_table').DataTable();
+				  
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 $("#menu_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching menu list</td></tr>');
+             }
+          });
+	}
+	function addOffer(data){
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/offer/addOffer",
+             data: data,
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				alert("Offer Added Successfully!");
+                window.location.href='dashboard.html';
+				 
+             },
+             error: function (jqXHR, status) {			 
+                 // error handler
+				 console.log(jqXHR);
+				 
+                 alert('Something Went Wrong!');
+             }
+          });
+    }
+	function getCustomers($window){
+		
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/cust/getCust",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+                 
+				 if(data.customers.length > 0){
+					for(var key in data.customers) {
+					 $("#cust_table").find('tbody')
+					.append('<tr><td><a href="javascript:editCust('+data.customers[key].customer_id+');">'+data.customers[key].customer_id+'</a></td><td>'+data.customers[key].name +'</td><td>'+data.customers[key].address+'</td><td>'+data.customers[key].contact_no+'</td><td>'+data.customers[key].email_id+'</td></tr>');
+					var newOptionCat = $('<option>');
+						newOptionCat.attr('value', data.customers[key].customer_id).text(data.customers[key].name);
+						$('#ledg_sel_cust').append(newOptionCat);
+				}
+				 }else{
+					$("#cust_table").find('tbody')
+					.append('<tr><td colspan="8">No Customers to display. Please Add new customer.</td></tr>');
+				 }
+				 $('#cust_table').DataTable();	
+				  
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 $("#cust_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching customers</td></tr>');
+             }
+          });
+	}
+	function getMenuForOffer(){
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/menu/getMenu",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},	
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+                 menus = data.menu;
+				 if(data.menu.length > 0){
+					for(var key in data.menu) {
+						var newOptionCat = $('<option>');
+						newOptionCat.attr('value', data.menu[key].product_id).text(data.menu[key].product_name+'-'+data.menu[key].product_category);
+						$('#sel_prod').append(newOptionCat);
+					}
+				 }
+				
+				  
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 $("#menu_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching menu list</td></tr>');
+             }
+          });
+	}
+	function getCustomersForOffer(){
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/cust/getCust",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},	
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				customers = data.customers;
+				 if(data.customers.length > 0){
+					for(var key in data.customers) {
+						var newOptionCat = $('<option>');
+						newOptionCat.attr('value', data.customers[key].customer_id).text(data.customers[key].name);
+						$('#sel_cust').append(newOptionCat);
+					}
+				 }
+				
+				  
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 $("#cust_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching menu list</td></tr>');
+             }
+          });
+	}
+	function getOffers($window){
+		
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/offer/getOffers",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				 if(data.offer.length > 0){
+					for(var key in data.offer) {
+					 $("#offer_table").find('tbody')
+					.append('<tr><td>'+data.offer[key].offer_id+'</td><td>'+data.offer[key].cust_name +'</td><td>'+data.offer[key].product_name+'</td><td>'+data.offer[key].base_price+'</td><td>'+data.offer[key].product_price+'</td></tr>');
+					}
+				 }else{
+					$("#offer_table").find('tbody')
+					.append('<tr><td colspan="8">Currently No Running Offers. Please Add new offer.</td></tr>');
+				 }		
+				 $('#offer_table').DataTable();			  
+             },
+
+             error: function (jqXHR, status) {
+                 $("#offer_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching offers</td></tr>');
+             }
+          });
+	}
+	function getOffersForCustomer(data){
+		var editData = {'customer_id':data.customer_id,'product_id':data.product_id, 'access_token' : localStorage.getItem('token')};
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/offer/getOfferDetails",
+			 data: editData,	
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				offers = data.offer;  
+				if(offers != undefined && offers != '' && offers.length > 0){
+						$('#offer_price').val(offers[0].product_price);		
+				}else{
+					$('#offer_price').val('0');		
+				}
+             },
+             error: function (jqXHR, status) {
+             }
+		  });
+	}
+	
+	function getBalanceSheetDetails($window){
+		
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/offer/getBalanceSheet",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				 if(data.bsheet.length > 0){
+					for(var key in data.bsheet) {
+					 $("#bsheet_table").find('tbody')
+					.append('<tr><td><a href="javascript:editBSheet('+data.bsheet[key].balance_sheet_id+');">'+data.bsheet[key].balance_sheet_id+'</a></td><td>'+data.bsheet[key].name +'</td><td>'+data.bsheet[key].total_amount+'</td><td>'+data.bsheet[key].paid_amount+'</td><td>'+data.bsheet[key].balance_amount+'</td></tr>');
+					}
+				 }else{
+					$("#bsheet_table").find('tbody')
+					.append('<tr><td colspan="8">Currently No Running Orders Found.</td></tr>');
+				 }
+				 $('#bsheet_table').DataTable();					  
+				
+             },
+
+             error: function (jqXHR, status) {
+                 $("#bsheet_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching Balance Sheet Records</td></tr>');
+             }
+          });
+	}
+	function getCanDetails($window){
+		
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/cans/getCanDetails",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				 if(data.canRec.length > 0){
+					 var total_can = 0;
+					 var rem_can = 0;
+					 var rec_can = 0;
+					for(var key in data.canRec) {
+					 $("#can_table").find('tbody')
+					.append('<tr><td><a href="javascript:editCanRecord('+data.canRec[key].can_detail_id+');">'+data.canRec[key].can_detail_id+'</a></td><td>'+data.canRec[key].name +'</td><td>'+data.canRec[key].deposit_amount+'</td><td>'+data.canRec[key].can_quantity+'</td><td>'+data.canRec[key].can_received+'</td><td>'+data.canRec[key].can_remaining+'</td></tr>');
+					total_can = total_can + parseFloat(data.canRec[key].can_quantity);
+					rem_can = rem_can + parseFloat(data.canRec[key].can_remaining);	
+					rec_can = rec_can + parseFloat(data.canRec[key].can_received);	
+					}
+					$('#can_table').DataTable();					  
+					$("#can_table").find('tbody')
+					.append('<tr><td colspan="3"></td><td>'+total_can+'</td><td>'+rec_can+'</td><td>'+rem_can+'</td></tr>');
+				 }else{
+					$("#can_table").find('tbody')
+					.append('<tr><td colspan="8">Currently No Running Orders Found.</td></tr>');
+				 }
+				 
+				
+             },
+
+             error: function (jqXHR, status) {
+                 $("#can_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching Can Records</td></tr>');
+             }
+          });
+	}
+	function getLedgerDetails(data){
+		var filterData = {'customer_id':data.customer_id,'from_date':data.from_date,'to_date':data.to_date, 'access_token' : localStorage.getItem('token')};	
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/order/getLedgerRecords",
+			 crossDomain: true,
+			 data: filterData,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+
+				 if(data.ledgerData.length > 0){
+					 var total = 0;
+					 var totalCan = 0;
+					 var totalBox = 0;
+					 var totalKg = 0;
+
+					for(var key in data.ledgerData) {
+					 $("#ledger_table").find('tbody')
+					.append('<tr><td>'+data.ledgerData[key].order_date +'</td><td>'+data.ledgerData[key].name +'</td><td>'+data.ledgerData[key].materials +'</td><td>'+data.ledgerData[key].pckg+'</td><td>'+data.ledgerData[key].tran_cost+'</td><td>'+data.ledgerData[key].pckg_cost+'</td><td>'+data.ledgerData[key].discount+'</td><td>'+data.ledgerData[key].grand_total+'</td><td>'+data.ledgerData[key].gst+'</td><td>'+data.ledgerData[key].delivery_status+'</td></tr>');
+
+					if(data.ledgerData[key].pckg && !data.ledgerData[key].pckg.includes('NA')){
+						var eachPckg = data.ledgerData[key].pckg.split(","); 
+						for(var recId in eachPckg) {
+							var rec = eachPckg[recId].trim().split(" ");
+							if(rec[1] == 'can'){
+								totalCan = totalCan + parseFloat(rec[0]);
+							}else if(rec[1] == 'box'){
+								totalBox = totalBox + parseFloat(rec[0]);
+							}else{
+								totalKg = totalKg + parseFloat(rec[0]);
+							}
+						}
+					}
+					total = total + parseFloat(data.ledgerData[key].grand_total);
+					}
+					$('#ledger_table').DataTable();	
+					$("#ledger_table").find('tbody')
+					.append('<tr><td colspan="3">Total</td><td>'+totalCan+' Cans, '+totalBox+' Boxes,'+totalKg+' Kgs</td><td colspan="3"></td><td>'+total+'</td><td colspan="2"></td></tr>');
+					$('#printLedgerRecord').show();
+					
+				 }else{
+					$("#ledger_table").find('tbody')
+					.append('<tr><td colspan="8">Currently No Running Orders Found.</td></tr>');
+				 }
+				 					  
+				 getLedgerBSDetails(filterData);
+             },
+
+             error: function (jqXHR, status) {
+                 $("#ledger_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching Ledger Records</td></tr>');
+             }
+          });
+	}
+	function getExpenseDetails(data){
+		var filterData = {'expense_name':data.expense_name,'from_date':data.from_date,'to_date':data.to_date, 'access_token' : localStorage.getItem('token')};	
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/expense/getExpenseRecords",
+			 crossDomain: true,
+			 data: filterData,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				var total = 0;
+				 if(data.expense.length > 0){
+					for(var key in data.expense) {
+					 $("#expense_table").find('tbody')
+					 .append('<tr><td><a href="javascript:editExpense('+data.expense[key].expense_id+');">'+data.expense[key].expense_id+'</a></td><td>'+data.expense[key].edate +'</td><td>'+data.expense[key].expense_name+'</td><td>'+data.expense[key].amount+'</td><td>'+data.expense[key].remark+'</td></tr>');
+					 total = total + parseFloat(data.expense[key].amount);
+					}
+					$('#expense_table').DataTable();
+					$("#expense_table").find('tbody')
+					 .append('<tr><td colspan="3">Total Expenses</td><td>'+total+'</td><td></td></tr>');
+					 		
+					$('#print_expense').show();
+					
+				 }else{
+					$("#expense_table").find('tbody')
+					.append('<tr><td colspan="8">Currently No Running Expenses Found.</td></tr>');
+				 }
+				 					  
+				 getLedgerBSDetails(filterData);
+             },
+
+             error: function (jqXHR, status) {
+                 $("#ledger_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching Ledger Records</td></tr>');
+             }
+          });
+	}
+	function getLedgerBSDetails(data){
+		var filterData = {'customer_id':data.customer_id,'from_date':data.from_date,'to_date':data.to_date, 'access_token' : localStorage.getItem('token')};	
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/order/getLedgerBSRecords",
+			 crossDomain: true,
+			 data: filterData,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				
+				 if(data.ledgerBSData.length > 0){
+					 var bal_amt = 0;
+					 var paid_amt = 0;
+					 var total = 0;
+					for(var key in data.ledgerBSData) {
+						$("#ledger_bs_table").find('tbody')
+						.append('<tr><td>'+data.ledgerBSData[key].pay_date+'</td><td>'+data.ledgerBSData[key].name +'</td><td>'+data.ledgerBSData[key].btamt +'</td><td>'+data.ledgerBSData[key].bpamt+'</td><td>'+data.ledgerBSData[key].bbamt+'</td><td>'+data.ledgerBSData[key].payment_remark+'</td></tr>');
+						paid_amt = paid_amt + parseFloat(data.ledgerBSData[key].bpamt);
+						if($("#ledg_sel_cust").val() != 'none'){
+							bal_amt = parseFloat(data.ledgerBSData[key].bbamt);	
+							total = parseFloat(data.ledgerBSData[key].btamt);
+						}else{
+							bal_amt = bal_amt + parseFloat(data.ledgerBSData[key].bbamt);	
+							total = total + parseFloat(data.ledgerBSData[key].btamt);
+						}	
+					}
+					$('#ledger_bs_table').DataTable();
+					$("#ledger_bs_table").find('tbody')
+					.append('<tr><td colspan="2">Total</td><td>'+total+'</td><td>'+paid_amt+'</td><td>'+bal_amt+'</td><td></td></tr>');
+				
+				 }else{
+					$("#ledger_bs_table").find('tbody')
+					.append('<tr><td colspan="8">Currently No Payment Details Found.</td></tr>');
+				 }
+				 					  
+             },
+
+             error: function (jqXHR, status) {
+                 $("#ledger_bs_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching Ledger Records</td></tr>');
+             }
+          });
+	}
+	function getAllExpenses($window){
+		
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/expense/getExpense",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				 var total = 0;
+				 if(data.expense.length > 0){
+					for(var key in data.expense) {
+					 $("#expense_table").find('tbody')
+					.append('<tr><td><a href="javascript:editExpense('+data.expense[key].expense_id+');">'+data.expense[key].expense_id+'</a></td><td>'+data.expense[key].edate +'</td><td>'+data.expense[key].expense_name+'</td><td>'+data.expense[key].amount+'</td><td>'+data.expense[key].remark+'</td></tr>');
+					total = total + parseFloat(data.expense[key].amount);
+					}
+					$('#expense_table').DataTable();	
+					$("#expense_table").find('tbody')
+					 .append('<tr><td colspan="3">Total Expenses</td><td>'+total+'</td><td></td></tr>');
+				 }else{
+					$("#expense_table").find('tbody')
+					.append('<tr><td colspan="8">Currently No Running Expenses. Please Add new expense.</td></tr>');
+				 }		
+				 
+						  
+             },
+
+             error: function (jqXHR, status) {
+                 $("#expense_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching expenses</td></tr>');
+             }
+          });
+	}
+	function getExpenseType(){
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/expense/getExpenseType",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},	
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				expenseType = data.expenseType;
+				 if(data.expenseType.length > 0){
+					for(var key in data.expenseType) {
+						var newOptionCat = $('<option>');
+						newOptionCat.attr('value', data.expenseType[key].expense_name).text(data.expenseType[key].expense_name);
+						$('#expense_name').append(newOptionCat);
+					}
+				 }
+				
+				  
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 $("#expense_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching Expense Type list</td></tr>');
+             }
+          });
+	}
+	function printRecord(id){
+		$(id).printThis({
+			removeScripts: true,
+			importStyle: false,
+			formValues: true,
+			pageTitle: "Print Ledger",  
+			loadCSS: "css/bootstrap.min.css",
+			importCSS: true
+		});
+		
+	}
+	
+</script>
+</head>
+<body>
+	<div id="wrapper">
+
+		<header id="header" class="head-section"> </header>
+
+		<div id="page-wrapper" style="margin:0 0 0 0px">
+			<div class="row">
+				<div class="col-lg-12">
+						<div class="col-lg-11">
+					<h3 align="center" class="page-header">RTS Foods India Pvt Ltd (Warehouse Management)</h3>
+						</div>	
+						<div class="col-lg-1">
+					<div style="float: right; padding-left: 10px;padding-top: 40px;">
+						<button type="button" class="btn btn-primary" data-toggle="button"
+							aria-pressed="false" autocomplete="off" id="logout">Logout</button>
+					</div>	
+				</div>
+				</div>
+				
+				<!-- /.col-lg-12 -->
+			</div>
+			<div id="exTab2" class="container" >
+				<ul class="nav nav-tabs">
+					<li class="active"><a href="#0" data-toggle="tab"><h4>Welcome</h4></a>
+					</li>
+					<li ><a href="#1" data-toggle="tab"><h4>Orders</h4></a>
+					</li>
+				<li ><a href="#2" data-toggle="tab"><h4>Materials</h4></a>
+					</li>
+				<li ><a href="#3" data-toggle="tab"><h4>Customers</h4></a>
+					</li>
+					<li ><a href="#4" data-toggle="tab"><h4>Offers</h4></a>
+					</li>
+					<li ><a href="#5" data-toggle="tab"><h4>Balance Sheet</h4></a>
+					</li>
+					<li ><a href="#6" data-toggle="tab"><h4>Ledger</h4></a>
+					</li>
+					<li ><a href="#7" data-toggle="tab"><h4>Expenses</h4></a>
+					</li>
+					<li ><a href="#8" data-toggle="tab"><h4>Cans</h4></a>
+					</li>
+				</ul>
+
+				<div class="tab-content">
+						<div class="tab-pane active" id="0">	
+							<div style="float:right; padding-right: 100px;padding-top: 10px;">
+									
+									<button type="button" class="btn btn-primary" data-toggle="button"
+										aria-pressed="false" autocomplete="off" id="neworder">New Order</button>
+							</div>
+							<div class="col-lg-12">
+									<div class="col-lg-4">	
+										
+									</div>	
+								<div class="col-lg-7">	
+									<div style="float:left; padding-left: 50px;padding-top: 10px;">
+										<h3>Welcome To Warehouse Management</h3>
+										<h4>Features:</h4>
+										<h5> - Order Management</h5>
+										<h5> - Balance Sheet</h5>
+										<h5> - Customer Database</h5>
+										<h5> - Material Database</h5>
+										<h5> - Ledger Record Management</h5>
+										<h5> - Customer Centric Offers</h5>
+										<h5> - Expense Management</h5>
+									</div>
+								</div>	
+							</div>	
+						</div>
+					<div class="tab-pane" id="1">
+						
+							<!-- <div style="float:right; padding-right: 10px;">
+									
+									<button type="button" class="btn btn-primary" data-toggle="button"
+										aria-pressed="false" autocomplete="off" id="neworder">New Order</button>
+							</div> -->
+							<h3>Order Summary</h3>
+						<table class="table table-bordered table_striped" id="orders_table">
+							<thead>
+								<tr>
+									<th>Order</th>
+									<th>Order Date</th>
+									<th>Customer Name</th>
+									<th>Mobile Number</th>
+									<th>Address</th>
+									<th>Mat. Cost</th>
+									<th>Tran Cost</th>
+									<th>Pckg Cost</th>
+									<th>Discount</th>
+									<th>GST</th>
+									<th>Order Amount</th>
+									<th>Status</th>
+								</tr>
+							</thead>
+							<tbody id="order_record">
+								
+							</tbody>
+						</table>
+					</div>
+					<div class="tab-pane" id="2">
+							<div style="float: right; padding-right: 10px;">
+								<button type="button" class="btn btn-primary" data-toggle="button"
+									aria-pressed="false" id="newmenu">Add Product</button>
+							</div>
+						<h3>Products</h3>
+						<table class="table table-bordered" id="menu_table">
+							<thead>
+								<tr>
+									<th>Product Id</th>
+									<th>Product Name</th>
+									<th>Product Category</th>
+									<th>Price</th>
+									<th>Package Style</th>
+								</tr>
+							</thead>
+							<tbody id="menu_record">
+								
+							</tbody>
+						</table>
+					</div>
+					<div class="tab-pane" id="3">
+						<div style="float: right; padding-right: 20px;">
+							<button type="button" class="btn btn-primary" data-toggle="button"
+								aria-pressed="false" id="newcust">Add Customer</button>
+						</div>
+					<h3>Customer</h3>
+					<table class="table table-bordered" id="cust_table">
+						<thead>
+							<tr>
+								<th>Customer ID</th>
+								<th>Name</th>
+								<th>Address</th>
+								<th>Contact No</th>
+								<th>Email</th>
+								
+							</tr>
+						</thead>
+						<tbody id="customer_record">
+							
+						</tbody>
+					</table>
+				</div>
+				<div class="tab-pane" id="4">
+						<div class="col-lg-12" style="padding-bottom: 20px;">
+								<div class="col-lg-3">
+										<label for="exampleInputName2">Select Customer </label> 
+										<select  class="form-control" name="sel_cust" id="sel_cust">
+										  <option value="none" selected>-- Select -- </option>
+										</select>	
+								</div>
+									<div class="col-lg-3">
+											<label for="exampleInputName2">Select Products </label> 
+											<select  class="form-control" name="sel_prod" id="sel_prod">
+											  <option value="none" selected>-- Select -- </option>
+											</select>
+									</div>
+									<div class="col-lg-2">
+											<label for="exampleInputName2">Base Price : </label> <input
+											type="text" disabled class="form-control" id="base_price" name="base_price">
+									</div>
+									<div class="col-lg-2">
+											<label for="exampleInputName2">Offer Price : </label> <input
+											type="text" class="form-control" id="offer_price" name="offer_price">
+									</div>
+									<div class="col-lg-2">
+											<div style="float: right; padding-top: 22px;">
+											<button type="button"  class="btn btn-primary" data-toggle="button"
+											aria-pressed="false" id="addOffer">Add Offer</button>
+											</div>
+									</div>
+							</div>
+						<h3>Product Offers for Customers</h3>
+						<table class="table table-bordered " id="offer_table">
+							<thead>
+								<tr>
+									<th>Offer Id</th>
+									<th>Customer Name</th>
+									<th>Product</th>
+									<th>Base Price</th>
+									<th>Offer Price</th>
+									
+								</tr>
+							</thead>
+							<tbody id="offer_records">
+								
+							</tbody>
+						</table>
+					</div>
+					<div class="tab-pane" id="5">
+							
+						<h3>Customer Balance Sheet</h3>
+						<table class="table table-bordered" id="bsheet_table">
+							<thead>
+								<tr>
+									<th>Balance Sheet ID</th>
+									<th>Customer Name</th>
+									<th>Total Amount</th>
+									<th>Paid Amount</th>
+									<th>Balance Amount</th>
+									
+								</tr>
+							</thead>
+							<tbody id="bsheet_record">
+								
+							</tbody>
+						</table>
+					</div>
+					<div class="tab-pane" id="6">
+							<div class="col-lg-12" style="padding-bottom: 20px;">
+									<div class="col-lg-2">
+											<label for="exampleInputName2">Select Customer </label> 
+											<select  class="form-control" name="ledg_sel_cust" id="ledg_sel_cust">
+											  <option value="none" selected>-- Select -- </option>
+											</select>	
+									</div>
+										<div class="col-lg-2">
+												<label for="exampleInputName2">From </label> 
+												<input type="date" class="form-control" id="from_date" name="from_date">
+										</div>
+										<div class="col-lg-2">
+												<label for="exampleInputName2">To</label> 
+												<input type="date" class="form-control" id="to_date" name="to_date">
+										</div>
+										<div class="col-lg-2">
+												<div style="float: right; padding-top: 24px;">
+												<button type="button"  class="btn btn-primary" data-toggle="button"
+												aria-pressed="false" id="getLedgerRecord">Get Record</button>
+												</div>
+										</div>
+										<div class="col-lg-2">
+												<div style="padding-top: 24px;">
+												<button type="button"  class="btn btn-primary" data-toggle="button"
+												aria-pressed="false" id="reset">Reset</button>
+												</div>
+										</div>
+										<div class="col-lg-2">
+												<div style="padding-top: 24px;float:right;">
+												<button type="button"  class="btn btn-primary" data-toggle="button"
+												aria-pressed="false" id="printLedgerRecord">Print</button>
+												</div>
+										</div>
+								</div>	
+						<h3>Ledger</h3>
+						<table class="table table-bordered" id="ledger_table">
+							<thead>
+								<tr>
+									<th>Order Date</th>
+									<th>Customer</th>
+									<th>Materials</th>
+									<th>Quantity</th>
+									<th>Transport Cost</th>
+									<th>Packaging Cost</th>
+									<th>Discount</th>
+									<th>Total Amount</th>
+									<th>GST</th>
+									<th>Status</th>
+								</tr>
+							</thead>
+							<tbody id="ledger_record">
+								
+							</tbody>
+						</table>
+						<h3>Balance Sheet</h3>
+						<table class="table table-bordered" id="ledger_bs_table">
+							<thead>
+								<tr>
+									<th>Payment Date</th>
+									<th>Customer</th>
+									<th>Total Amount</th>
+									<th>Paid Amount</th>
+									<th>Balance Amount</th>
+									<th>Remark</th>
+								</tr>
+							</thead>
+							<tbody id="ledger_bs_record">
+								
+							</tbody>
+						</table>
+					</div>
+					<div class="tab-pane" id="7">
+							<div class="col-lg-12" style="padding-bottom: 20px;">
+										<div class="col-lg-2">
+												<label for="exampleInputName2">Expense Type</label> 
+												<select  class="form-control" name="expense_name" id="expense_name">
+												<option value="none" selected>-- Select -- </option>
+												</select>	
+										</div>
+										<div class="col-lg-2">
+												<label for="exampleInputName2">From </label> 
+												<input type="date" class="form-control" id="from_date_exp" name="from_date_exp">
+										</div>
+										<div class="col-lg-2">
+												<label for="exampleInputName2">To</label> 
+												<input type="date" class="form-control" id="to_date_exp" name="to_date_exp">
+										</div>
+										<div class="col-lg-2">
+												<div style="float: right; padding-top: 24px;">
+												<button type="button"  class="btn btn-primary" data-toggle="button"
+												aria-pressed="false" id="getExpensesRecords">Get Record</button>
+												</div>
+										</div>
+										<div class="col-lg-2">
+												<div style="padding-top: 24px;">
+												<button type="button"  class="btn btn-primary" data-toggle="button"
+												aria-pressed="false" id="reset_expense">Reset</button>
+												</div>
+												
+										</div>
+										<div class="col-lg-2">
+												<div style="padding-top: 24px;float:right;">
+												<button type="button"  class="btn btn-primary" data-toggle="button"
+												aria-pressed="false" id="print_expense">Print</button>
+												</div>
+										</div>
+										
+								</div>	
+								
+								<div style="float: right; padding-right: 20px;">
+										
+										<button type="button" class="btn btn-primary" data-toggle="button"
+											aria-pressed="false" id="newexpense">Add Expense</button>
+									</div>
+					<h3>Expenses</h3>
+					<table class="table table-bordered" id="expense_table">
+						<thead>
+							<tr>
+								<th>Expense ID</th>
+								<th>Date</th>
+								<th>Expense Name</th>
+								<th>Amount</th>
+								<th>Remark</th>
+							</tr>
+						</thead>
+						<tbody id="expense_record">
+							
+						</tbody>
+					</table>
+				</div>
+				<div class="tab-pane" id="8">
+						
+					<h3>Milk Can Sheet</h3>
+					<table class="table table-bordered" id="can_table">
+						<thead>
+							<tr>
+								<th>Customer Id</th>
+								<th>Customer Name</th>
+								<th>Deposited Amount</th>
+								<th>Cans Taken</th>
+								<th>Can Received</th>
+								<th>Can Remaining</th>								
+							</tr>
+						</thead>
+						<tbody id="can_record">
+							
+						</tbody>
+					</table>
+				</div>
+				</div>
+				</div>
+			</div>
+		
+		<!-- /.row -->
+		</div>
+		<!-- /#page-wrapper -->
+		<div >
+				<span style="float: center;">Copyright © 2017 BSW Innovative Solutions.</span>
+		</div>
+		
+	</div>
+	<!-- /#wrapper -->
+
+</body>
+
+</html>

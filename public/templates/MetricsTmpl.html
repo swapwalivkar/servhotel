@@ -1,0 +1,138 @@
+
+<fieldset>
+
+	<legend class="color-2"> Cluster Metrics </legend>
+	<!-- Default home page to start with  -->
+	<div class="row">
+		<div
+			class="home-search-container col-xs-12 col-sm-10 col-sm-offset-1 col-md-6 col-md-offset-3">
+
+			<!-- 	<div class="h3 sub-title .col-xs-12">We discover something new
+			for you every day</div>  -->
+
+			<!-- Look for an dashboard for all the clusters -->
+
+			<div class="row">
+
+				<form class="dtab" id="search-form">
+
+					<div class="form-group form-group-sm" id="gym_ame">
+						<label class="col-sm-1 control-label no-padding-right"
+							for="form-field-1"> Cluster </label>
+						<div class="col-sm-8 ">
+							<select class="search-dropdown" style="width: 100%" id="clusters">
+								<option value="">Select Cluster</option>
+								<!-- Get the cluster list here -->
+							</select>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div class="spacer"></div>
+
+	<div id="metrics" class='col-md-12' style="display: none">
+		<!--  	<ul class="nav nav-tabs" id="active_tabs">
+				<li id="tab_gym"><a dum="gym"
+					data-toggle="tab"> <i class="green icon-home bigger-110"></i>
+						HDFS Capacity (TB)
+				</a></li>
+				<li id="tab_yoga"><a dum="yoga"
+					data-toggle="tab"> Yarn Metrics </a></li>
+				<li id="tab_music"><a dum="music"
+					data-toggle="tab"> Hosts and Components </a></li>
+				<li id="tab_dance"><a dum="dance"
+					data-toggle="tab"> Hosts </a></li>
+			</ul> -->
+
+
+		<ul class="nav nav-tabs" id="active_tabs">
+			<li role="presentation" class="active"><a dum="metrics_hdfs">HDFS
+					Capacity (TB)</a></li>
+			<li role="presentation"><a dum="metrics_yarn" data-toggle="tab">Yarn
+					Metrics</a></li>
+			<li role="presentation"><a dum="metrics_hosts_comp"
+				data-toggle="tab">Hosts and Components</a></li>
+			<li role="presentation"><a dum="metrics_hosts" data-toggle="tab">Hosts</a></li>
+			<li role="presentation"><a dum="metrics_services"
+				data-toggle="tab">Services</a></li>
+			<li role="presentation"><a dum="metrics_buss_apps"
+				data-toggle="tab">Business Apps</a></li>
+		</ul>
+		<div id="my-tab-content" class="tab-content">
+			<div class="tab-pane active" id="metrics_hdfs">
+				</br> </br>
+				<p>HDFS Capacity in TB</p>
+				<div class="row">
+					<div class="col-md-8">
+						<canvas id="hdfs_line" width="500" height="350"> </canvas>
+					</div>
+				</div>
+			</div>
+			<div class="tab-pane" id="metrics_yarn">
+				</br> </br>
+				<div class="row">
+					<div class="col-md-6">
+						<h4 class="title">Memory Metrics</h4>
+						<canvas id="yarn_mem_line" width="500" height="350"> </canvas>
+					</div>
+					<div class="col-md-6">
+						<h4 class="title">Container Metrics</h4>
+						<canvas id="yarn_con_line" width="500" height="350"> </canvas>
+					</div>
+				</div>
+			</div>
+
+			<!-- Need to be seen if both can be merged into one -->
+			<div class="tab-pane" id="metrics_hosts">
+				<h1>Hosts</h1>
+				<table id="hosts" class="table table-bordered">
+					<thead>
+						<TR>
+							<TH>Host Name</TH>
+							<TH>Date</TH>
+						</TR>
+					</thead>
+					<tbody id="tbodyhosts">
+					</tbody>
+				</table>
+			</div>
+			<div class="tab-pane" id="metrics_hosts_comp">
+				<h1>Host and Components</h1>
+				<table id="host_serv" class="table table-bordered">
+					<thead>
+						<TR>
+							<TH>Host Name</TH>
+							<TH>Component Name</TH>
+							<TH>Date</TH>
+						</TR>
+					</thead>
+					<tbody id="tbodyhostserv">
+					</tbody>
+				</table>
+			</div>
+			<div class="tab-pane" id="metrics_services">
+				<h1>HDP Services</h1>
+				<table id="services" class="table table-bordered">
+					<thead>
+						<TR>
+							<TH>Service Name</TH>
+							<TH>Date</TH>
+						</TR>
+					</thead>
+					<tbody id="tbodyserv">
+					</tbody>
+				</table>
+			</div>
+			<div class="tab-pane" id="metrics_buss_apps">
+				<h1>Business Apps</h1>
+				<p>This Page is under construction</p>
+			</div>
+		</div>
+
+
+	</div>
+
+</fieldset>

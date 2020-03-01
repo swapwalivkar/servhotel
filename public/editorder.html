@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<title>Modify Order</title>
+<link href="css/bootstrap.min.css" rel="stylesheet" />
+<!--  <link href="css/main-app.css" rel="stylesheet" /> -->
+<link href="css/fontawesome/fontello.css" rel="stylesheet" />
+<link href="css/jquery-ui.min.css" rel="stylesheet" />
+<link href="css/bootstrap-horizon.css" rel="stylesheet">
+<link href="css/nv.d3.min.css" rel="stylesheet">
+<link href="css/metisMenu.min.css" rel="stylesheet">
+<link href="css/sb-admin-2.css" rel="stylesheet">
+<link href="css/timeline.css" rel="stylesheet">
+<link href="css/morris.css" rel="stylesheet">
+<link href="css/fontawesome/font-awesome.min.css" rel="stylesheet"
+	type="text/css">
+
+<script type="text/javascript" src="js/libs/load.min.js"></script>
+<script type="text/javascript" src="js/libs/underscore/underscore-"></script>
+<script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="js/jquery.js"></script>
+<script src="js/printThis.js"></script>
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+<script>
+	var srNo = 0;
+	var host_url;
+	var customer_id;
+	$(function() {
+		$('#form').on('keydown', '#cust_contact', function(e){-1!==$.inArray(e.keyCode,[46,8,9,27,13,110,190])||(/65|67|86|88/.test(e.keyCode)&&(e.ctrlKey===true||e.metaKey===true))&&(!0===e.ctrlKey||!0===e.metaKey)||35<=e.keyCode&&40>=e.keyCode||(e.shiftKey||48>e.keyCode||57<e.keyCode)&&(96>e.keyCode||105<e.keyCode)&&e.preventDefault()});
+		if(localStorage.getItem('token') == undefined){
+			window.location.href='login.html';
+		}
+		$("#gst_details").hide();
+		host_url = localStorage.getItem('host-url');
+		var id = getParameterByName('id');
+		
+		//setDeliveryPersons('hotel');
+		getOrderForEdit(id);
+		getMenuForOrder(id);
+		
+		$('#modify_order').click(function(e) {
+			
+			e.preventDefault();
+			var error = 0;
+			var contact_err = 0;
+			var data = {};
+			 
+			  for (var i = 0, ii = form.length; i < ii; ++i) {
+				var input = form[i];
+				if (input.name) {	
+					
+					if(!$.trim(input.value).length) { 
+						error++;	
+					}else{
+						if(input.name == 'cust_contact'){
+							if(!validatePhone(input.name)){
+								contact_err++;
+							}
+						}
+					}
+							
+				  data[input.name] = input.value;
+				}
+				
+			  }
+			data['order_id'] = id;
+			data['access_token'] = localStorage.getItem('token');
+			data['customer_id'] = customer_id;
+			if(error > 0){
+				alert('Please fill mandatory fields!');
+			}else if(contact_err > 0){
+					alert('Please Enter Valid Contact Details');
+			  }else{
+				  if($('#delivery_status').val() == 'Cancelled'){
+					 if(confirm('Are you sure about Cancelling the order? This order may get deleted from system!')){
+						$('#modify_order').attr('disabled',true);
+						updateOrder(data);
+					 }else{
+						 return false;
+					 } 
+				  }else{
+					$('#modify_order').attr('disabled',true);
+					updateOrder(data);
+				  }
+				
+			}
+			
+			 
+		});
+		$('#all_orders').click(function() {
+			window.location.href='dashboard.html';	
+		});
+		$('#print_order').click(function() {
+			printOrder();
+		});
+		
+		var previous;
+
+		
+	});
+	
+	function getOrderForEdit(data){
+	 var editData = {'id':data,  access_token : localStorage.getItem('token')};
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/order/getOrderDetails/",
+             data: editData,
+			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				customer_id = data.orders[0].customer_id;
+				$('#cust_name').val(data.orders[0].name);
+				$('#cust_contact').val(data.orders[0].contact_no)
+				$('#delivery_address').val(data.orders[0].address)
+				$("#delivery_status").val(data.orders[0].delivery_status);
+				$("#total_amount").val(data.orders[0].total_price);
+				$("#pckg_cost").val(data.orders[0].pckg_cost);
+				$("#tran_cost").val(data.orders[0].tran_cost);
+				$("#discount").val(data.orders[0].discount);
+				$("#grand_total").val(data.orders[0].grand_total);
+				$("#assigned_to").val(data.orders[0].assigned_to);
+				$("#gst").val(data.orders[0].gst);
+				var date = data.orders[0].order_date;
+				$("#order_date").val(date.slice(0,10));
+				var gst =  parseFloat(data.orders[0].gst)
+				if(gst > 0){
+					$("#gst_details").show();
+				}
+				if(data.orders[0].delivery_status == 'Assigned'){
+					$('#assigned_to').attr("disabled", false); 
+				}
+             },
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('Something Went Wrong!');
+             }
+          });
+	}
+	function getMenuForOrder(data){
+	 var editData = {'id':data , access_token : localStorage.getItem('token')};
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/order/getMenuForOrder/",
+             data: editData,
+			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				for (var val in data.items) {	
+					$("#orders_table").find('tbody')
+					.append('<tr><td>'+(++srNo)+'</td><td>'+ data.items[val].item_name+'</td><td>'+data.items[val].quantity+'</td><td>'+data.items[val].price+'</td><td>'+data.items[val].total+'</td></tr>');					
+				}
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('Something Went Wrong!');
+             }
+          });
+    }
+	function setDeliveryPersons(data){
+	 var company = {'company':data};
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/order/getDeliveryPerson/",
+             data: company,
+			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				
+				for (var val in data.persons) {
+					var option = data.persons[val].firstName+' '+data.persons[val].lastName;
+					var newOption = $('<option>');
+					newOption.attr('value', data.persons[val].id).text(option);
+					$('#assigned_to').append(newOption);
+				}								 
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('fail' + status.code);
+             }
+          });
+    }
+	function updateOrder(data){
+	 
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/order/updateOrder/",
+             data: data,
+			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				alert("Order Updated Successfully!");
+				window.location.href='dashboard.html';
+				 
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('Something Went Wrong!');
+             }
+          });
+    }
+	function getParameterByName(name) {
+		var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+		return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+	}
+
+function validatePhone(txtPhone) {
+    var a = document.getElementById(txtPhone).value;
+    var filter = /^((\+[1-9]{1,4}[ \-]*)|(\([0-9]{2,3}\)[ \-]*)|([0-9]{2,4})[ \-]*)*?[0-9]{3,4}?[ \-]*[0-9]{3,4}?$/;
+    if (filter.test(a)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+function printOrder(){
+	$('#printable').printThis({
+			removeScripts: true,
+			importStyle: false,
+			formValues: true,
+			pageTitle: "Print Order",  
+			loadCSS: "css/bootstrap.min.css",
+			importCSS: true
+		});
+	}
+</script>
+
+</head>
+
+<body>
+
+	<div id="wrapper">
+		<header id="header" class="head-section"> </header>
+		<div id="page-wrapper" style="
+    padding-right: 50px;
+    border-right-width: 0.667;
+    margin-right: 200px;
+    margin-left: 200px;
+">
+			
+			<!-- /.row -->
+			<div class="row">
+				<div class="col-lg-12" id="printable">
+					<div class="panel panel-default">
+						<div class="panel-heading">Order Details</div>
+						<div class="panel-body" style="background:#e3e8ef">
+							<div class="row">
+								<div class="col-lg-12">
+									<form id="form" role="form">
+										
+
+										<form class="form-inline">
+											<div class="form-group">
+												<div class="col-lg-6">
+												<label for="exampleInputName2">Customer Name : </label> <input
+													type="text" class="form-control" id="cust_name" name="cust_name"
+													placeholder="Customer Name"></div>
+													<div class="col-lg-3">
+													<label for="exampleInputName2">Mobile Number : </label> <input
+													type="text" class="form-control" id="cust_contact" name="cust_contact"
+													placeholder="Mobile Number"></div>
+													<div class="col-lg-3">
+															<label for="exampleInputName2">Order Date : </label>
+															<input type="date" class="form-control" id="order_date" name="order_date">
+													</div>
+											</div>
+											<br></br>
+												<br></br>
+											<!-- <div class="form-group">
+												<div class="col-lg-6">
+												<label for="exampleInputName2">Order Address : </label> <input
+													type="textarea" class="form-control" id="delivery_address" name="delivery_address"
+													>
+													</div>
+											</div>
+											<br></br> -->
+											
+											
+											<div class="form-group">
+												<div class="col-lg-4">
+												<label for="exampleInputName2">Order Status : </label> <select class="form-control" name="delivery_status" id="delivery_status">
+												  <option value="Pending">Pending</option>
+												  <option value="Delivered">Delivered</option>
+												  <option value="Cancelled">Cancelled</option>
+												</select>
+												</div>
+											
+											
+											
+											</div>
+												<br></br>
+												<br></br>
+									<div class="panel panel-default">	
+											<div class="panel-body " style="background:#c0cde0;">	
+										<table class="table table-bordered" id="orders_table">	
+												<thead>
+													<tr>
+														<th>Sr No</th>
+														<th>Item</th>
+														<th>Quantity(Kg/Can/Box)</th>
+														<th>Unit Price</th>
+														<th>Total Price</th>
+													</tr>
+												</thead>
+												<tbody id="current_order">
+												</tbody>
+											</table>
+										</div>
+										</div>	
+											<div class="panel panel-default" style="background:#D3D3D3;">
+											<div class="panel-body " style="background:#c0cde0;">
+												<div class=" col-lg-2">
+															<label for="exampleInputName2">Transportation: </label> 
+															<input	type="text" disabled value="0" class="form-control" id="tran_cost" name="tran_cost">
+															</div>
+												<div class=" col-lg-2">
+														<label for="exampleInputName2">Packaging: </label> 
+														<input	type="text" disabled value="0" class="form-control" id="pckg_cost" name="pckg_cost">
+														</div>
+												<div class=" col-lg-2">
+													<label for="exampleInputName2">Discount(%): </label> 
+													<input	type="text" disabled value="0" class="form-control" id="discount" name="discount">
+													</div>		
+													<div class=" col-lg-2">
+															<label for="exampleInputName2">GST(%): </label> 
+															<input	type="text" disabled value="0" class="form-control" id="gst" name="gst">
+															</div>		
+												<div class=" col-lg-2">
+												<label for="exampleInputName2">Mat. Cost: </label> 
+												<input	type="text" value="0" disabled="true" class="form-control" id="total_amount" name="total_amount">
+												</div>
+												<div class=" col-lg-2">
+													<label for="exampleInputName2">Total Cost: </label> 
+													<input	type="text" value="0" disabled="true" class="form-control" id="grand_total" name="grand_total">
+												</div>
+											</div>	
+											</div>
+
+										</form>
+
+										<div class="col-lg-12">
+												<div class="col-lg-8">
+										<button type="submit" id="modify_order"  class="btn btn-primary">Modify Order
+											</button>
+											<button type="submit" id="print_order" style="margin-left: 10px;" class="btn btn-primary">Print Order
+												</button>	
+										<button type="reset" id="all_orders"  style="margin-left: 10px;" class="btn btn-primary">Back
+											</button>
+										</div>
+										<div class="col-lg-4">
+												<div id="gst_details" style="float:right;margin-top:10px;">
+														<label for="exampleInputName2">GSTIN: 27AAHCR3084R1ZL</label> 
+												</div>	
+										</div>
+									</div>	
+									</form>
+								</div>
+								<!-- /.col-lg-6 (nested) -->
+							</div>
+							<!-- /.row (nested) -->
+						</div>
+						<!-- /.panel-body -->
+					</div>
+					<!-- /.panel -->
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+		</div>
+		<!-- /#page-wrapper -->
+
+	</div>
+	<!-- /#wrapper -->
+
+</body>
+
+</html>

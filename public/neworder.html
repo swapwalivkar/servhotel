@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<title>Add Order</title>
+<link href="css/bootstrap.min.css" rel="stylesheet" />
+<!--  <link href="css/main-app.css" rel="stylesheet" /> -->
+<link href="css/fontawesome/fontello.css" rel="stylesheet" />
+<link href="css/jquery-ui.min.css" rel="stylesheet" />
+<link href="css/bootstrap-horizon.css" rel="stylesheet">
+<link href="css/nv.d3.min.css" rel="stylesheet">
+<link href="css/metisMenu.min.css" rel="stylesheet">
+<link href="css/sb-admin-2.css" rel="stylesheet">
+<link href="css/timeline.css" rel="stylesheet">
+<link href="css/morris.css" rel="stylesheet">
+<link href="css/fontawesome/font-awesome.min.css" rel="stylesheet"
+	type="text/css">
+
+<script type="text/javascript" src="js/libs/load.min.js"></script>
+<script type="text/javascript" src="js/libs/underscore/underscore-"></script>
+<script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="js/jquery.js"></script>
+<script src="js/printThis.js"></script>
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+<script>
+	var menus = '';
+	var offers = '';
+	var srNo = 0;
+	var total_bill_amt = 0;
+	var menu_items = [];
+	var customer_id;
+	var host_url;
+	var date = new Date();
+	var can_quantity = 0;
+	var can_rate = 0;
+	$(function() {
+		if(localStorage.getItem('token') == undefined){
+			window.location.href='login.html';
+		}
+		host_url = localStorage.getItem('host-url');
+		
+		$("#qty").hide();
+		$("#gst_details").hide();	
+		$("#box").hide();
+		$("#kg").show();
+		getMenu();
+		getCustomers();
+		
+	});
+	
+	$(function() {
+		$('#costs').on('keydown', '#tran_cost,#pckg_cost,#discount,#gst', function(e){-1!==$.inArray(e.keyCode,[46,8,9,27,13,110,190])||(/65|67|86|88/.test(e.keyCode)&&(e.ctrlKey===true||e.metaKey===true))&&(!0===e.ctrlKey||!0===e.metaKey)||35<=e.keyCode&&40>=e.keyCode||(e.shiftKey||48>e.keyCode||57<e.keyCode)&&(96>e.keyCode||105<e.keyCode)&&e.preventDefault()});
+		$('#save_order').click(function(e) {			
+			e.preventDefault();
+			var error = 0;
+			var contact_err = 0;
+			var data = {};
+			  for (var i = 0, ii = form.length; i < ii; ++i) {
+				var input = form[i];
+				if (input.name && (input.name == 'cust_name' || input.name == 'cust_contact' || input.name == 'deli_address' || input.name == 'total_amount')) {
+					if(!$.trim(input.value).length) { 
+						error++;	
+					 }else{
+						
+						if(input.name == 'cust_contact'){
+							if(!validatePhone(input.name)){
+								contact_err++;
+								
+							}
+						}
+					
+					 }	
+				  data[input.name] = input.value;
+				}
+				
+			  }
+			  
+			data['customer_id'] = customer_id;
+			data['tran_cost'] = $( "#tran_cost" ).val();
+			data['pckg_cost'] = $( "#pckg_cost" ).val();
+			data['grand_total'] = $( "#grand_total" ).val();
+			data['discount'] = $( "#discount" ).val();
+			data['can_quantity'] = can_quantity;
+			data['can_rate'] = can_rate;
+			if($( "#order_date" ).val()  == '')
+				data['order_date'] = new Date().toJSON().slice(0,10);
+			else  
+				data['order_date'] = $( "#order_date" ).val();
+
+			data['gst'] = $( "#gst" ).val();
+			data['access_token'] = localStorage.getItem('token');
+			  if(error > 0){
+					alert('Please Fill Mandatory Fields!');
+			  }else if(contact_err > 0){
+					alert('Please Enter Valid Contact Details');
+			  }else if(srNo == 0){
+				  alert('Please Select Menu for Order!');
+			  }else{
+				
+				data['menu_items'] = JSON.stringify(menu_items);
+				$('#save_order').attr('disabled',true);
+				addData(data);
+			  }
+			
+			 
+		});
+		$('#all_orders').click(function() {
+			window.location.href='dashboard.html';
+		});
+		$('#add_to_list').click(function() {
+			if($( "#menu_cat" ).val() != 'none'){
+				$('#add_to_list').attr('disabled',true);
+				var each_menu = {};
+								$("#orders_table").find('tbody')
+					.append('<tr><td>'+(++srNo)+'</td><td>'+ $("#menu_cat option:selected").text()+'</td><td>'+$( "#quantity" ).val()+' '+$("#pckg_style").val()+'</td><td>'+$( "#price" ).val()+'</td><td>'+$( "#total" ).val()+'</td></tr>');
+				total_bill_amt = (total_bill_amt) + parseFloat($( "#total" ).val());
+				each_menu['id'] = $("#menu_cat").val();
+				//each_menu['remark'] = $("#remark").val();
+				each_menu['quantity'] = $("#quantity").val();
+				each_menu['total'] = $("#total").val();
+				each_menu['price'] = $("#price").val();
+				each_menu['item_name'] = $("#menu_cat option:selected").text()
+				each_menu['pckg_style'] = $("#pckg_style").val();
+				if($("#pckg_style").val() == 'can'){
+					can_quantity = can_quantity + parseInt($("#quantity").val());
+				}
+				menu_items.push(each_menu);
+				
+				var pcost = 0;
+				var tcost = 0;
+				var disc = 0;
+				var gst = 0;
+
+				if($("#pckg_cost").val() != undefined && $("#pckg_cost").val().length > 0)	
+					pcost = parseFloat($("#pckg_cost").val());
+				if($("#tran_cost").val() != undefined && $("#tran_cost").val().length > 0)	
+					tcost = parseFloat($("#tran_cost").val());
+				if($("#discount").val() != undefined && $("#discount").val().length > 0)
+					disc = parseFloat($("#discount").val());	
+				if($("#gst").val() != undefined && $("#gst").val().length > 0)
+					gst = parseFloat($("#gst").val());	
+
+				var disc_amt = (total_bill_amt+pcost+tcost)/100 * disc;
+				var total_cost = total_bill_amt+pcost+tcost - disc_amt;
+				var gst_cost = total_cost/100*gst;
+				$( "#total_amount" ).val(total_bill_amt);
+				$( "#grand_total" ).val(total_cost + gst);
+				$( "#menu_cat" ).val('none');
+				$( "#price" ).val('');
+				$( "#total" ).val('');
+				$( "#remark" ).val('');
+				$( "#quantity" ).val('');	
+				$('#add_to_list').attr('disabled',false);
+			}else{
+				alert('Please Select Menu Item!');
+			}
+				
+
+		});
+		$('#reset_order').click(function() {
+				$("#orders_table").find('tbody')
+					.html('');
+				srNo = 0;	
+				$("#qty").hide();
+				$("#gst_details").hide();	
+				$("#kg").show();
+
+				$( "#total_amount" ).val('0');
+				$( "#menu_cat" ).val('none');
+				$( "#price" ).val('');
+				$( "#total" ).val('');
+				$( "#remark" ).val('');
+				$( "#quantity" ).val('');	
+				$( "#pckg_cost" ).val('0');	
+				$( "#tran_cost" ).val('0');	
+				$( "#discount" ).val('0');	
+				$( "#grand_total" ).val('0');	
+				$( "#gst" ).val('0');	
+				total_bill_amt = 0;
+
+
+		});
+
+	
+		$('#menu_cat').change(function() {	
+			if($(this).val() != 'none'){
+				for(var key in menus) {
+					var data = {'customer_id':customer_id,'product_id':menus[key].product_id}
+						if($(this).val() == menus[key].product_id){
+							getOffersForCustomer(data,menus[key].base_price);		
+							$("#pckg_style").val(menus[key].prod_pckg_style);
+						if(menus[key].prod_pckg_style == 'kg'){
+							$("#kg").show();								
+							$("#qty").hide();
+							$("#box").hide();
+						}else if(menus[key].prod_pckg_style == 'can'){
+							$("#qty").show();
+							$("#kg").hide();
+							$("#box").hide();
+						}else{
+							$("#qty").hide();
+							$("#kg").hide();
+							$("#box").show();
+						}
+					}	
+				}	
+			}else{
+				$( "#price" ).val('');
+				$( "#remark" ).val('');
+				$( "#total" ).val('');
+				$( "#quantity" ).val('');	
+			}
+			
+		});
+		$('#sel_cust').change(function() {	
+			if($(this).val() != 'none'){
+				customer_id = $(this).val(); 	
+				getCustForEdit(customer_id);
+				getCanOffersForCustomer(customer_id,50);
+			}	
+		});
+		$( "#quantity" ).keyup(function () { 
+				this.value = this.value.replace(/[^0-9]/g,'');
+		});
+		$( "#quantity" ).focusout(function() {
+			
+			$('#total').val(($( "#price" ).val())*($( "#quantity" ).val()));	
+		});
+		$('#pckg_cost').focusout(function() {	
+			
+			var pcost = parseFloat($(this).val());
+			var tamt = 0;
+			var tcost = 0;
+			var disc = 0;
+			var gst = 0;
+			if($("#total_amount").val() != undefined && $("#total_amount").val().length > 0)
+				tamt = parseFloat($("#total_amount").val());
+			if($("#tran_cost").val() != undefined && $("#tran_cost").val().length > 0)	
+				tcost = parseFloat($("#tran_cost").val());
+			if($("#discount").val() != undefined && $("#discount").val().length > 0)
+				disc = parseFloat($("#discount").val());
+			if($("#gst").val() != undefined && $("#gst").val().length > 0)
+				gst = parseFloat($("#gst").val());		
+
+			var bamt = pcost + tamt + tcost; 
+			var gtot = bamt/100 *(disc);
+			var famt = bamt - gtot;
+			var final_total = famt/100 *(gst);
+
+			$( "#grand_total" ).val(famt + final_total);
+                
+			
+        });
+        $('#tran_cost').focusout(function() {	
+			
+			var tcost = parseFloat($(this).val());
+			var tamt = 0;
+			var pcost = 0;
+			var disc = 0;
+			var gst = 0;
+			if($("#total_amount").val() != undefined && $("#total_amount").val().length > 0)
+				tamt = parseFloat($("#total_amount").val());
+
+			if($("#pckg_cost").val() != undefined && $("#pckg_cost").val().length > 0)	
+					pcost = parseFloat($("#pckg_cost").val());
+
+			if($("#discount").val() != undefined && $("#discount").val().length > 0)
+				disc = parseFloat($("#discount").val());
+
+			if($("#gst").val() != undefined && $("#gst").val().length > 0)
+				gst = parseFloat($("#gst").val());	
+
+			var bamt = tcost + tamt + pcost;
+			var gtot = bamt/100 *(disc);
+			var famt = bamt - gtot;
+			var final_total = famt/100 *(gst);
+
+			$( "#grand_total" ).val(famt + final_total);
+                
+		});
+		$('#discount').focusout(function() {	
+			var discount = 0;
+			
+			discount = parseFloat($(this).val());
+							
+			var tamt = 0;
+			var pcost = 0;
+			var tcost = 0;
+			var gst = 0;
+			if(discount > 100){
+				alert("Discount Cannot be more than 100 %");	
+				discount = 0;
+				$("#discount").val('0')
+			}
+			if($("#total_amount").val() != undefined && $("#total_amount").val().length > 0)
+				tamt = parseFloat($("#total_amount").val());
+			if($("#pckg_cost").val() != undefined && $("#pckg_cost").val().length > 0)	
+				pcost = parseFloat($("#pckg_cost").val());
+			if($("#tran_cost").val() != undefined && $("#tran_cost").val().length > 0)	
+				tcost = parseFloat($("#tran_cost").val());
+			if($("#gst").val() != undefined && $("#gst").val().length > 0)	
+				tcost = parseFloat($("#gst").val());	
+			
+			var bamt = tcost + tamt + pcost;
+			var gtot = bamt/100 *(discount);
+			var famt = bamt - gtot;
+			var final_total = famt/100 *(gst);
+
+			$( "#grand_total" ).val(famt + final_total);
+			    
+			
+		});
+		$('#gst').focusout(function() {	
+			var gst = 0;
+			gst = parseFloat($(this).val());
+			var discount = 0;
+			var tamt = 0;
+			var pcost = 0;
+			var tcost = 0;
+			if(gst >= 100){	
+				alert('Invalid GST Value!')	
+				$("#gst").val('0');
+				gst = 0;
+			}
+			if($("#total_amount").val() != undefined && $("#total_amount").val().length > 0)
+					tamt = parseFloat($("#total_amount").val());
+				if($("#pckg_cost").val() != undefined && $("#pckg_cost").val().length > 0)	
+					pcost = parseFloat($("#pckg_cost").val());
+				if($("#tran_cost").val() != undefined && $("#tran_cost").val().length > 0)	
+					tcost = parseFloat($("#tran_cost").val());
+				if($("#discount").val() != undefined && $("#discount").val().length > 0)	
+					discount = parseFloat($("#discount").val());
+				
+				var bamt = tcost + tamt + pcost;
+				var gtot = bamt/100 *(discount);
+				var famt = bamt - gtot;
+				var final_total = famt/100 *(gst);
+				
+				$( "#grand_total" ).val(famt + final_total);
+
+			if(gst >0){
+				$("#gst_details").show();
+			}else{
+				$("#gst_details").hide();
+			}      
+			
+		});
+		$( "#print_order" ).click(function () { 
+				printOrder();
+		});
+	});
+
+	function addData(data){
+
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/order/addOrder/",
+             data: data,
+			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				alert("Order Added Successfully!");
+				//printOrder();	
+                window.location.href='dashboard.html';
+				 
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('fail' + status.code);
+             }
+          });
+    }
+	function validate(){
+		alert(('#cust_name').value);
+	}
+	function validatePhone(txtPhone) {
+		var a = document.getElementById(txtPhone).value;
+		var filter = /^((\+[1-9]{1,4}[ \-]*)|(\([0-9]{2,3}\)[ \-]*)|([0-9]{2,4})[ \-]*)*?[0-9]{3,4}?[ \-]*[0-9]{3,4}?$/;
+		if (filter.test(a)) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	function getMenu(){
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/menu/getMenu",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},	
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+                 menus = data.menu;
+				 if(data.menu.length > 0){
+					for(var key in data.menu) {
+						var newOptionCat = $('<option>');
+						newOptionCat.attr('value', data.menu[key].product_id).text(data.menu[key].product_name+'-'+data.menu[key].product_category);
+						$('#menu_cat').append(newOptionCat);
+					}
+				 }
+				
+				  
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 $("#menu_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching menu list</td></tr>');
+             }
+          });
+	}
+	function getOffersForCustomer(data,basePrice){
+		var editData = {'customer_id':data.customer_id,'product_id':data.product_id, access_token : localStorage.getItem('token')};
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/offer/getOfferDetails",
+			 crossDomain: true,
+			 data: editData,	
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				 offers = data.offer; 
+				 if(offers != undefined && offers.length > 0)
+					$('#price').val(offers[0].product_price);	
+				else
+					$('#price').val(basePrice);	 
+
+				$( "#quantity" ).val('1');	
+				if($( "#quantity" ).val() != '')
+					$('#total').val(($( "#price" ).val())*($( "#quantity" ).val()));		
+             },
+             error: function (jqXHR, status) {
+			
+             }
+          });
+	}
+	function getCanOffersForCustomer(data,base_price){
+		var editData = {'customer_id':data.customer_id,'product_id':data.product_id, access_token : localStorage.getItem('token')};
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/offer/getOfferDetails",
+			 crossDomain: true,
+			 data: editData,	
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				 offers = data.offer; 
+				 if(offers != undefined && offers.length > 0)
+					can_rate = offers[0].product_price;	
+				else
+					can_rate = base_price;	 
+             },
+             error: function (jqXHR, status) {
+			
+             }
+          });
+	}
+	function getCustomers(){
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/cust/getCust",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},	
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				customers = data.customers;
+				 if(data.customers.length > 0){
+					for(var key in data.customers) {
+						var newOptionCat = $('<option>');
+						newOptionCat.attr('value', data.customers[key].customer_id).text(data.customers[key].name);
+						$('#sel_cust').append(newOptionCat);
+					}
+				 }
+				
+				  
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 $("#cust_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching menu list</td></tr>');
+             }
+          });
+	}
+	function getCustForEdit(data){
+	 var editData = {'id':data, access_token : localStorage.getItem('token')};
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/cust/getCustDetails/",
+             data: editData,
+			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+			
+                $('#cust_contact').val(data.cust[0].contact_no)
+               // $('#deli_address').val(data.cust[0].address)
+                
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('fail' + status.code);
+             }
+          });
+    }
+	function printOrder(){
+		$('#printable').printThis({
+			removeScripts: true,
+			importStyle: false,
+			formValues: true,
+			importCSS: true
+		});
+	}
+</script>
+
+</head>
+
+<body>
+
+	<div id="wrapper">
+		<header id="header" class="head-section"> </header>
+		<div id="page-wrapper" style="
+    padding-right: 50px;
+    border-right-width: 0.667;
+    margin-right: 200px;
+    margin-left: 200px;
+">
+			
+			<!-- /.row -->
+			<div class="row">
+				<div class="col-lg-12" id="printable">
+					<div class="panel panel-default">
+						<div class="panel-heading">New Order</div>
+						<div class="panel-body" style="background:#e3e8ef">
+							<div class="row" >
+								<div class="col-lg-12">
+									<form id="form" role="form">
+										
+
+										<form class="form-inline">
+											
+											<div class="form-group">
+												<div class="col-lg-6">
+														<label for="exampleInputName2">Select Customer </label> 
+														<select  class="form-control" name="sel_cust" id="sel_cust">
+														  <option value="none" selected>-- Select -- </option>
+														</select>	
+												</div>
+													<div class="col-lg-3">
+													<label for="exampleInputName2">Mobile Number : </label> <input
+													type="text" class="form-control" id="cust_contact" name="cust_contact"
+													placeholder="Mobile Number"></div>
+													<div class="col-lg-3">
+															<label for="exampleInputName2">Order Date : </label>
+															<input type="date" class="form-control" id="order_date" name="order_date">
+													</div>
+											</div>
+											
+											<!-- <div class="form-group">
+										<div class="col-lg-12">
+												<label for="exampleInputName2">Delivery Address : </label> <input
+													type="textarea" class="form-control" id="deli_address" name="deli_address"
+													placeholder="Address"></div>
+											</div> -->
+											<br></br><br></br>
+											<div class="panel panel-default">
+											<div class="panel-body" style="background:#c0cde0;" >
+											<h4>Select Material</h4>
+												<div class="col-lg-4">
+												<label for="exampleInputName2">Item </label> 
+												<select  class="form-control" name="menu_cat" id="menu_cat">
+												  <option value="none" selected>-- None -- </option>
+												</select>	
+												</div>	
+												
+												<div class="col-lg-2">
+												<input type="hidden" name="pckg_style" id="pckg_style" value="">
+												<div id="qty">	
+													<label for="exampleInputName2">No Of Cans: </label> 
+												</div>
+												<div id="kg">	
+													<label for="exampleInputName2">Kg: </label> 
+												</div>
+												<div id="box">	
+														<label for="exampleInputName2">No Of Boxes: </label> 
+												</div>
+												<input type="textarea" class="form-control" id="quantity" name="quantity">
+												</div>	
+												<div class="col-lg-2">
+												<label for="exampleInputName2">Price: </label> <input
+													type="textarea" disabled class="form-control" id="price" name="price"
+													>
+												</div>	
+												<div class="col-lg-2">
+												<label for="exampleInputName2">Total: </label> <input
+													type="text" disabled="true" class="form-control" id="total" name="total"
+													>
+												</div>	
+												<div class="col-lg-2" style="padding-top: 23px;">
+													<label for="exampleInputName2"></label>
+												<button type="button" id="add_to_list"  class="btn  btn-primary">Add
+											</button>
+												</div>	
+										<!-- <div class="col-lg-6" style="padding-top: 10px;">
+										<label for="exampleInputName2">Remark : </label> <input
+													type="textarea" class="form-control" id="remark" name="remark"
+													placeholder="Menu Remark"></div> -->
+											
+											<br></br>
+												<br></br>
+										<table class="table table-bordered" id="orders_table">	
+												
+												<thead>
+													<tr>
+														<th>Sr No</th>
+														<th>Item</th>
+														<th>Quantity</th>
+														<th>Unit Price</th>
+														<th>Total Price</th>
+													</tr>
+												</thead>
+												<tbody id="current_order">
+													
+												</tbody>
+											</table>
+									</div>
+								</div>
+								<div class="panel panel-default" >
+											<div class="panel-body " style="background:#c0cde0;" id="costs">
+													<h4>Costs & Taxes</h4>
+												<div class=" col-lg-2">
+															<label for="exampleInputName2">Transportation: </label> 
+															<input	type="text" value="0" class="form-control" id="tran_cost" name="tran_cost">
+															</div>
+												<div class=" col-lg-2">
+														<label for="exampleInputName2">Packaging: </label> 
+														<input	type="text" value="0" class="form-control" id="pckg_cost" name="pckg_cost">
+														</div>
+												<div class=" col-lg-2">
+													<label for="exampleInputName2">Discount(%): </label> 
+													<input	type="text" value="0" class="form-control" id="discount" name="discount">
+													</div>		
+													<div class=" col-lg-2">
+															<label for="exampleInputName2">GST(%): </label> 
+															<input	type="text" value="0" class="form-control" id="gst" name="gst">
+													</div>			
+												<div class=" col-lg-2">
+												<label for="exampleInputName2">Mat. Cost: </label> 
+												<input	type="text" value="0" disabled="true" class="form-control" id="total_amount" name="total_amount">
+												</div>
+												<div class=" col-lg-2">
+													<label for="exampleInputName2">Total Cost: </label> 
+													<input	type="text" value="0" disabled="true" class="form-control" id="grand_total" name="grand_total">
+												</div>
+												
+											</div>	
+										</div>	
+											</div>	
+										</form>
+											<br>
+										
+										<div class="col-lg-12">
+												<div class="col-lg-8">
+										<button type="submit" id="save_order"  style="margin-left: 0px;" class="btn btn-primary">Save Order
+											</button>
+											<button type="submit" id="print_order"  style="margin-left: 10px;"  class="btn btn-primary">Print
+												</button>
+										<button type="reset" id="all_orders" style="margin-left: 10px;"  class="btn btn-primary">Back
+											</button>
+										<button type="reset" id="reset_order" style="margin-left: 10px;"  class="btn btn-primary">Reset Order
+											</button>
+										</div>
+											<div class="col-lg-4" id="gst_details" style="margin-top:10px;">
+													<label for="exampleInputName2">GSTIN: 27AAHCR3084R1ZL</label> 
+											</div>		
+										</div>	
+									</form>
+								</div>
+								<!-- /.col-lg-12 (nested) -->
+							</div>
+							<!-- /.row (nested) -->
+						</div>
+						<!-- /.panel-body -->
+					</div>
+					<!-- /.panel -->
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+		</div>
+		<!-- /#page-wrapper -->
+
+	</div>
+	<!-- /#wrapper -->
+
+</body>
+
+</html>

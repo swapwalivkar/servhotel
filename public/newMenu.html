@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<title>Add Product</title>
+<link href="css/bootstrap.min.css" rel="stylesheet" />
+<!--  <link href="css/main-app.css" rel="stylesheet" /> -->
+<link href="css/fontawesome/fontello.css" rel="stylesheet" />
+<link href="css/jquery-ui.min.css" rel="stylesheet" />
+<link href="css/bootstrap-horizon.css" rel="stylesheet">
+<link href="css/nv.d3.min.css" rel="stylesheet">
+<link href="css/metisMenu.min.css" rel="stylesheet">
+<link href="css/sb-admin-2.css" rel="stylesheet">
+<link href="css/timeline.css" rel="stylesheet">
+<link href="css/morris.css" rel="stylesheet">
+<link href="css/fontawesome/font-awesome.min.css" rel="stylesheet"
+	type="text/css">
+
+<script type="text/javascript" src="js/libs/load.min.js"></script>
+<script type="text/javascript" src="js/libs/underscore/underscore-"></script>
+<script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="js/jquery.js"></script>
+
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+<script>
+
+	var host_url;
+	$(function() {
+		$('#form').on('keydown', '#menu_price', function(e){-1!==$.inArray(e.keyCode,[46,8,9,27,13,110,190])||(/65|67|86|88/.test(e.keyCode)&&(e.ctrlKey===true||e.metaKey===true))&&(!0===e.ctrlKey||!0===e.metaKey)||35<=e.keyCode&&40>=e.keyCode||(e.shiftKey||48>e.keyCode||57<e.keyCode)&&(96>e.keyCode||105<e.keyCode)&&e.preventDefault()});
+		if(localStorage.getItem('token') == undefined){
+			window.location.href='login.html';
+		}
+		host_url = localStorage.getItem('host-url');
+		$('#save_menu').click(function(e) {
+			
+			e.preventDefault();
+			var error = 0;
+			var contact_err = 0;
+			var data = {};
+			  for (var i = 0, ii = form.length; i < ii; ++i) {
+				var input = form[i];
+				if (input.name) {
+					if(!$.trim(input.value).length) { 
+						error++;	
+					 }
+				  data[input.name] = input.value;
+				}
+			  }
+			  data['access_token'] = localStorage.getItem('token');
+			  var prod_pckg_style = $('input[name=prod_pckg]:checked', '#form').val()
+			  if(prod_pckg_style == undefined){
+				alert('Select Material Packaging Style!');
+				return false;
+			  }
+			  data['prod_pckg_style'] = prod_pckg_style;
+			  if(error > 0){
+					alert('All Fields Are Mandatory');
+			  }else if(contact_err > 0){
+					alert('Please Enter Valid Product Details');
+			  }else{
+				$('#save_menu').attr('disabled',true);
+					addData(data);
+			  }
+			
+			 
+		});
+		$('#all_menu').click(function() {
+			window.location.href='dashboard.html';
+		});
+	});
+	function addData(data){
+
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/menu/addMenu/",
+             data: data,
+			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				alert("Product Added Successfully!");
+				window.location.href='dashboard.html';
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('Something Went Wrong!');
+             }
+          });
+    }
+	function validate(){
+		alert(('#cust_name').value);
+	}
+	function validatePhone(txtPhone) {
+		var a = document.getElementById(txtPhone).value;
+		var filter = /^((\+[1-9]{1,4}[ \-]*)|(\([0-9]{2,3}\)[ \-]*)|([0-9]{2,4})[ \-]*)*?[0-9]{3,4}?[ \-]*[0-9]{3,4}?$/;
+		if (filter.test(a)) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+</script>
+
+</head>
+
+<body>
+
+	<div id="wrapper">
+		<header id="header" class="head-section"> </header>
+		<div id="page-wrapper" style="
+    padding-right: 50px;
+    border-right-width: 0.667;
+    margin-right: 300px;
+    margin-left: 300px;
+">
+			<div class="row">
+				<div class="col-lg-12">
+					<h1 class="page-header">Add New Product</h1>
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">Product Details</div>
+						<div class="panel-body" style="background:#e3e8ef">
+							<div class="row">
+								<div class="col-lg-6">
+									<form id="form" role="form">
+										
+
+										<form class="form-inline">
+											
+										<div class="form-group">
+												<label for="exampleInputName2">Name : </label> <input
+													type="text" class="form-control" id="menu_name" name="menu_name"
+													placeholder="Name">
+											</div>
+											<div class="form-group">
+												<label for="exampleInputName2">Category : </label> <input
+													type="text" class="form-control" id="menu_cat" name="menu_cat"
+													placeholder="Category">
+											</div>
+											<div class="form-group">
+													<div class="col-lg-4">
+												<label for="exampleInputName2">Kg : </label> <input
+													type="radio" class="form-control" checked id="kg" value="kg" name="prod_pckg">
+													</div>
+													<div class="col-lg-4">
+													<label for="exampleInputName2">Can : </label> <input
+													type="radio" class="form-control" id="can" value="can" name="prod_pckg">
+													</div>
+													<div class="col-lg-4">
+														<label for="exampleInputName2">Box : </label> <input
+														type="radio" class="form-control" id="box" value="box" name="prod_pckg">
+													</div>
+											</div>
+											<div class="form-group">
+												<label for="exampleInputName2">Base Price : </label> <input
+													type="textarea" class="form-control" id="menu_price" name="menu_price"
+													placeholder="Price">
+											</div>
+											
+											
+										</form>
+
+
+										<button type="submit" id="save_menu"  class="btn btn-default">Add Product
+											</button>
+										<button type="reset" id="all_menu" class="btn btn-default">Back
+											</button>
+									</form>
+								</div>
+								<!-- /.col-lg-6 (nested) -->
+							</div>
+							<!-- /.row (nested) -->
+						</div>
+						<!-- /.panel-body -->
+					</div>
+					<!-- /.panel -->
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+		</div>
+		<!-- /#page-wrapper -->
+
+	</div>
+	<!-- /#wrapper -->
+
+</body>
+
+</html>

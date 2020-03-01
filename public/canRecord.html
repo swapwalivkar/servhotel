@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<title>Can Details</title>
+<link href="css/bootstrap.min.css" rel="stylesheet" />
+<!--  <link href="css/main-app.css" rel="stylesheet" /> -->
+<link href="css/fontawesome/fontello.css" rel="stylesheet" />
+<link href="css/jquery-ui.min.css" rel="stylesheet" />
+<link href="css/bootstrap-horizon.css" rel="stylesheet">
+<link href="css/nv.d3.min.css" rel="stylesheet">
+<link href="css/metisMenu.min.css" rel="stylesheet">
+<link href="css/sb-admin-2.css" rel="stylesheet">
+<link href="css/timeline.css" rel="stylesheet">
+<link href="css/morris.css" rel="stylesheet">
+<link href="css/fontawesome/font-awesome.min.css" rel="stylesheet"
+	type="text/css">
+
+<script type="text/javascript" src="js/libs/load.min.js"></script>
+<script type="text/javascript" src="js/libs/underscore/underscore-"></script>
+<script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="js/jquery.js"></script>
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+<script>
+	var srNo = 0;
+    var host_url;  
+	$(function() {
+        $('#form').on('keydown', '#deposit_amount,#can_quantity,#can_remaining,#can_received', function(e){-1!==$.inArray(e.keyCode,[46,8,9,27,13,110,190])||(/65|67|86|88/.test(e.keyCode)&&(e.ctrlKey===true||e.metaKey===true))&&(!0===e.ctrlKey||!0===e.metaKey)||35<=e.keyCode&&40>=e.keyCode||(e.shiftKey||48>e.keyCode||57<e.keyCode)&&(96>e.keyCode||105<e.keyCode)&&e.preventDefault()});
+		if(localStorage.getItem('token') == undefined){
+			window.location.href='login.html';
+		}
+		host_url = localStorage.getItem('host-url');
+        var id = getParameterByName('id');
+		
+		getCanDetailsForCustomer(id);
+        getEachCanDetailsForEdit(id);
+      
+        $('#update_canrec').click(function() {			
+			if($( "#can_rec" ).val() != '' && $( "#can_rec" ).val() != ''){								
+					var error = 0;
+					var contact_err = 0;
+                    var data = {};
+                   
+					for (var i = 0, ii = form.length; i < ii; ++i) {
+						var input = form[i];
+						if (input.name) {	
+							
+							if(!$.trim(input.value).length) { 
+								error++;	
+							}
+									
+						data[input.name] = input.value;
+						}
+						
+					}
+					data['id'] = id;
+					data['received_date'] = $( "#received_date" ).val();
+					var can_rec = parseFloat($("#can_rec").val());
+					if(can_rec == 0){
+						alert('Please Enter Valid Can Details!');
+						return false;
+                    }
+                    data['can_rec'] = can_rec;
+                    var old_rec= parseInt($("#can_received").val());
+					can_rec = can_rec + old_rec;
+					
+					if($( "#can_remark" ).val().length > 0)
+						data['can_remark'] = $( "#can_remark" ).val();
+					else
+						data['can_remark'] = 'NA';
+
+					data['access_token'] = localStorage.getItem('token');
+					
+					if(error > 0){
+						alert('Please fill mandatory fields!');
+					}else if(contact_err > 0){
+							alert('Please Enter Valid Contact Details');
+					}else{
+                        $("#can_table").find('tbody')
+                        .append('<tr><td>'+(++srNo)+'</td><td>'+ $("#received_date").val()+'</td><td>'+$( "#can_received" ).val()+'</td><td>'+$( "#can_remark" ).val()+'</td></tr>');
+                        var total_can = parseInt($('#can_quantity').val());                       
+                        $('#can_received').val(can_rec);
+                        var remain = total_can - can_rec;
+                        $('#can_remaining').val(remain);
+                        data['can_received'] = can_rec;
+                        data['can_remaining'] = remain;
+                        $('#update_canrec').attr('disabled',true);
+						updateCanDetails(data);
+					}
+			}	
+		});			
+		
+		$('#menu').click(function() {
+			window.location.href='dashboard.html';	
+		});
+		var previous;
+
+		
+	});
+	
+	
+	function getCanDetailsForCustomer(data){
+	 var editData = {'id':data, access_token : localStorage.getItem('token')};
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/cans/getCanDetailsForCustomer/",
+             data: editData,
+			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+			
+				$('#cust_name').val(data.canRec[0].name);
+				$('#deposit_amount').val(data.canRec[0].deposit_amount);
+				$('#can_quantity').val(data.canRec[0].can_quantity);
+                $('#can_received').val(data.canRec[0].can_received);
+                $('#can_remaining').val(data.canRec[0].can_remaining);
+                $('#customer_id').val(data.canRec[0].customer_id);
+                $('#can_received_date').val(data.canRec[0].can_received_date);
+				
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('fail' + status.code);
+             }
+          });
+	}
+	
+	function updateCanDetails(data){ 
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/cans/updateCanDetails/",
+             data: data,			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+                $('#update_can_detail').attr('disabled',false);
+                $('#can_rec').val('');
+				$('#can_remark').val('');
+				$('#received_date').val('');
+                alert("Can Details Updated Successfully!");	 
+                $('#update_canrec').attr('disabled',false);
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('fail' + status.code);
+             }
+          });
+	}
+	function getEachCanDetailsForEdit(data){
+	 var editData = {'id':data, access_token : localStorage.getItem('token')};
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/cans/getEachCanRecord/",
+             data: editData,
+			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+			
+				
+				for (var val in data.canRecData) {
+					$("#can_table").find('tbody')
+						.append('<tr><td>'+(++srNo)+'</td><td>'+ data.canRecData[val].received_date+'</td><td>'+data.canRecData[val].can_received+'</td><td>'+data.canRecData[val].can_remark+'</td></tr>');
+				}	
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('fail' + status.code);
+             }
+          });
+    }
+	function getParameterByName(name) {
+		var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+		return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+	}
+
+function validatePhone(txtPhone) {
+    var a = document.getElementById(txtPhone).value;
+    var filter = /^((\+[1-9]{1,4}[ \-]*)|(\([0-9]{2,3}\)[ \-]*)|([0-9]{2,4})[ \-]*)*?[0-9]{3,4}?[ \-]*[0-9]{3,4}?$/;
+    if (filter.test(a)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+</script>
+
+</head>
+
+<body>
+
+	<div id="wrapper">
+		<header id="header" class="head-section"> </header>
+		<div id="page-wrapper" style="
+    padding-right: 50px;
+    border-right-width: 0.667;
+    margin-right: 300px;
+    margin-left: 300px;
+">
+			<div class="row">
+				<div class="col-lg-12">
+					<h1 class="page-header">Manage Can Shipment</h1>
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">Customer Can Shipment Details</div>
+						<div class="panel-body">
+							<div class="row">
+								<div class="col-lg-12">
+									<form id="form" role="form">
+										
+
+										<form class="form-inline">
+												<div class="form-group" style="padding-top: 10px;">
+														<div class="col-lg-6">
+														<label for="exampleInputName2">Customer Name : </label> <input
+															type="text" disabled class="form-control" id="cust_name" name="cust_name"
+															placeholder="">
+															<input type="hidden" id="customer_id" name="customer_id" >
+													</div>
+													<div class="col-lg-6">
+												<label for="exampleInputName2">Deposit Amount : </label> <input
+													type="text" class="form-control" disabled id="deposit_amount" name="deposit_amount"
+													placeholder="">
+													</div>
+											</div>
+                                            <br></br>
+											<br></br>
+										
+											<div class="form-group" >
+													<div class="col-lg-6">
+												<label for="exampleInputName2">Total Can Taken : </label> <input
+													type="text" class="form-control" disabled id="can_quantity" name="can_quantity"
+													placeholder="">
+													</div>
+			
+                                                    <div class="col-lg-6">
+                                                            <label for="exampleInputName2">Can Remaining : </label> <input
+                                                                type="text" class="form-control" disabled id="can_remaining" name="can_remaining"
+                                                                placeholder="">
+                                                    </div>											
+													
+                                            </div>  
+                                            <br></br>
+											<br></br>
+                                            <div class="form-group" >
+													<div class="col-lg-6">
+                                                            <label for="exampleInputName2">Cans Received</label> <input
+                                                            type="textarea" disabled value="0" class="form-control" id="can_received" name="can_received"
+                                                            >
+													</div>
+                                                    <div class="col-lg-6">
+                                                            <label for="exampleInputName2">Last Cans Received Date</label> <input
+                                                            type="textarea" disabled value="0" class="form-control" id="can_received_date" name="can_received_date"
+                                                            >
+													</div>
+                                                 									
+													
+                                            </div>  
+                                            <div class="panel-body " id="editRec">
+                                                    <br></br>
+                                                    
+                                                    <h4>Add Received Cans</h4>
+                                                    <div class="col-lg-4">
+                                                    <label for="exampleInputName2">Received Date </label> 
+                                                    <input type="date" class="form-control" id="received_date" name="received_date">
+                                                    </div>	
+                                                    
+                                                    <div class="col-lg-3">
+                                                    <label for="exampleInputName2">Cans</label> <input
+                                                        type="textarea" value="0" class="form-control" id="can_rec" name="can_rec"
+                                                        >
+                                                    </div>	
+                                                    <div class="col-lg-3">
+                                                            <label for="exampleInputName2">Remark</label> <input
+                                                                type="text" class="form-control" id="can_remark" name="can_remark"
+                                                                >
+                                                            </div>		
+                                                    <div class="col-lg-2" style="padding-top: 25px;padding-bottom: 10px;">
+                                                        <label for="exampleInputName2"></label>
+                                                    <button type="button" id="update_canrec"  class="btn  btn-primary">Add 
+                                                </button>
+                                                    </div>
+                                                    <table class="table table-bordered" id="can_table">	
+                                                            
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Sr No</th>
+                                                                    <th>Received Date</th>
+                                                                    <th>Cans</th>
+                                                                    <th>Remark</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="can_record">
+                                                                
+                                                            </tbody>
+                                                        </table>
+                                                </div>	
+                                            
+                                            <div class="form-group">
+													<div class="col-lg-6">
+                                                            
+                                                            <button type="reset" id="menu" class="btn btn-primary">Back
+                                                                </button>
+													</div>
+                                                    
+                                            </div>   
+                                           
+										</form>
+									
+										
+										 
+											
+									</form>
+								</div>
+								<!-- /.col-lg-6 (nested) -->
+							</div>
+							<!-- /.row (nested) -->
+						</div>
+						<!-- /.panel-body -->
+					</div>
+					<!-- /.panel -->
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+		</div>
+		<!-- /#page-wrapper -->
+
+	</div>
+	<!-- /#wrapper -->
+
+</body>
+
+</html>

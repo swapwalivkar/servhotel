@@ -1,0 +1,232 @@
+{
+ "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/",
+
+ "items" : [
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/GANGLIA_MONITOR",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "GANGLIA_MONITOR",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/HBASE_CLIENT",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "HBASE_CLIENT",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/HCAT",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "HCAT",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/HDFS_CLIENT",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "HDFS_CLIENT",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/HIVE_CLIENT",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "HIVE_CLIENT",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/KNOX_GATEWAY",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "KNOX_GATEWAY",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/MAPREDUCE2_CLIENT",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "MAPREDUCE2_CLIENT",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/OOZIE_CLIENT",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "OOZIE_CLIENT",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/PIG",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "PIG",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/SLIDER",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "SLIDER",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/SQOOP",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "SQOOP",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/SUPERVISOR",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "SUPERVISOR",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/TEZ_CLIENT",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "TEZ_CLIENT",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/YARN_CLIENT",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "YARN_CLIENT",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   },
+   {
+     "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc/host_components/ZOOKEEPER_CLIENT",
+
+     "HostRoles" : {
+       "cluster_name" : "hdp53",
+       "component_name" : "ZOOKEEPER_CLIENT",
+       "host_name" : "wdctestlab0044-fe1.systems.uk.hsbc"
+     },
+     "host" : {
+       "href" :
+"http://wdctestlab0040.systems.uk.hsbc:8080/api/v1/clusters/hdp53/hosts/wdctestlab0044-fe1.systems.uk.hsbc"
+
+     }
+   }
+ ]
+}

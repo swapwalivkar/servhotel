@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<title>Login</title>
+<link href="css/bootstrap.min.css" rel="stylesheet" />
+<!--  <link href="css/main-app.css" rel="stylesheet" /> -->
+<link href="css/fontawesome/fontello.css" rel="stylesheet" />
+<link href="css/jquery-ui.min.css" rel="stylesheet" />
+<link href="css/bootstrap-horizon.css" rel="stylesheet">
+<link href="css/nv.d3.min.css" rel="stylesheet">
+<link href="css/metisMenu.min.css" rel="stylesheet">
+<link href="css/sb-admin-2.css" rel="stylesheet">
+<link href="css/timeline.css" rel="stylesheet">
+<link href="css/morris.css" rel="stylesheet">
+<link href="css/fontawesome/font-awesome.min.css" rel="stylesheet"
+	type="text/css">
+
+<script type="text/javascript" src="js/libs/load.min.js"></script>
+<script type="text/javascript" src="js/libs/underscore/underscore-"></script>
+<script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="js/jquery.js"></script>
+
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+<script>
+    	$(function() {
+			
+        $('#login').click(function(e) {
+			$('#login').attr('disabled',true);
+            var data = { username : $('#username').val(), password : $('#password').val()}
+            checkLogin(data);
+		});
+		$(document).bind('keypress', function(e) {
+            if(e.keyCode==13){
+                 $('#login').trigger('click');
+             }
+        });
+		
+        });
+
+	function checkLogin(data){
+
+     $.ajax({
+             type: "POST",
+             url: "http://13.126.153.66:3000/user/login",
+             data: data,
+			
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+                if(data.statusText == 'success'){
+					localStorage.setItem('token', data.access_token.token);;
+					localStorage.setItem('host-url','13.126.153.66:3000');
+					document.cookie='access_token='+data.access_token.token;
+					window.location.href='dashboard.html';
+					 
+				}else if(data.statusText == 'success'){
+					alert('Invalid Credentials!');	
+				} 
+             },
+             error: function (jqXHR, status) {
+				alert("Login Failed!");
+                 // error handler
+                 console.log(jqXHR);
+                
+             }
+          });
+    }
+	
+	
+</script>
+
+</head>
+
+<body>
+
+	<div id="wrapper">
+		<header id="header" class="head-section"> </header>
+		<div id="page-wrapper" style="
+    padding-right: 50px;
+    border-right-width: 0.667;
+    margin-right: 300px;
+    margin-left: 300px;
+">
+			<div class="row">
+				<div class="col-lg-12">
+					<h1 class="page-header">Warehouse Management</h1>
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">Login</div>
+						<div class="panel-body">
+							<div class="row">
+								<div class="col-lg-6">
+									<form id="form" role="form">
+										
+
+										<form class="form-inline">
+											<div class="form-group">
+												<label for="exampleInputName2">Username : </label> <input
+													type="text" class="form-control" id="username" name="username"
+													>
+											</div>
+											<div class="form-group">
+												<label for="exampleInputName2">Password : </label> <input
+													type="password" class="form-control" id="password" name="password"
+													>
+											</div>
+											
+										</form>
+
+
+										<button type="submit" id="login"  class="btn btn-primary">Login
+											</button>
+									
+											
+									</form>
+								</div>
+								<!-- /.col-lg-6 (nested) -->
+							</div>
+							<!-- /.row (nested) -->
+						</div>
+						<!-- /.panel-body -->
+					</div>
+					<!-- /.panel -->
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+		</div>
+		<!-- /#page-wrapper -->
+
+	</div>
+	<!-- /#wrapper -->
+
+</body>
+
+</html>

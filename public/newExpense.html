@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<title>Add Expense</title>
+<link href="css/bootstrap.min.css" rel="stylesheet" />
+<!--  <link href="css/main-app.css" rel="stylesheet" /> -->
+<link href="css/fontawesome/fontello.css" rel="stylesheet" />
+<link href="css/jquery-ui.min.css" rel="stylesheet" />
+<link href="css/bootstrap-horizon.css" rel="stylesheet">
+<link href="css/nv.d3.min.css" rel="stylesheet">
+<link href="css/metisMenu.min.css" rel="stylesheet">
+<link href="css/sb-admin-2.css" rel="stylesheet">
+<link href="css/timeline.css" rel="stylesheet">
+<link href="css/morris.css" rel="stylesheet">
+<link href="css/fontawesome/font-awesome.min.css" rel="stylesheet"
+	type="text/css">
+
+<script type="text/javascript" src="js/libs/load.min.js"></script>
+<script type="text/javascript" src="js/libs/underscore/underscore-"></script>
+<script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="js/jquery.js"></script>
+
+
+<script>
+
+	var host_url;
+	$(function() {
+		$('#form').on('keydown', '#amount', function(e){-1!==$.inArray(e.keyCode,[46,8,9,27,13,110,190])||(/65|67|86|88/.test(e.keyCode)&&(e.ctrlKey===true||e.metaKey===true))&&(!0===e.ctrlKey||!0===e.metaKey)||35<=e.keyCode&&40>=e.keyCode||(e.shiftKey||48>e.keyCode||57<e.keyCode)&&(96>e.keyCode||105<e.keyCode)&&e.preventDefault()});
+		if(localStorage.getItem('token') == undefined){
+			window.location.href='login.html';
+		}
+        host_url = localStorage.getItem('host-url');
+        getExpenseType();
+		$('#save_exp').click(function(e) {
+			
+			e.preventDefault();
+			var error = 0;
+			var contact_err = 0;
+			var data = {};
+			  if($("#date").val() == ''){
+				  error++;
+			  }
+			  if($("#amount").val() == ''){
+				  error++;
+			  }
+			  if($("#expense_category").val() == '' && $( "#expense_name" ).val() == 'none'){
+				  error++;
+			  }
+			  data['expense_name'] = $( "#expense_name" ).val();
+			  data['amount'] = $( "#amount" ).val()
+			  data['date'] = $( "#date" ).val();
+			  data['remark'] = $( "#remark" ).val();
+			  
+
+			  if($("#expense_category").val() && $("#expense_category").val() != ''){
+				  data['expense_name'] = $( "#expense_category" ).val();
+			  }else{
+				data['expense_name'] = $( "#expense_name" ).val();
+			  }
+			  
+			  data['access_token'] = localStorage.getItem('token');
+			  if($( "#date" ).val()  == '')
+				data['date'] = new Date().toJSON().slice(0,10);
+                else  
+				data['date'] = $( "#date" ).val();
+			  
+			  if(error > 0){
+					alert('All Fields Are Mandatory');
+			  }else if(contact_err > 0){
+					alert('Please Enter Valid Expense Details');
+			  }else{
+				$('#save_exp').attr('disabled',true);
+					addData(data);
+			  }
+			
+			 
+		});
+		$('#all_menu').click(function() {
+			window.location.href='dashboard.html';
+		});
+		$('#expense_name').change(function() {
+			if($(this).val() != 'none'){
+				$('#expense_category').attr('disabled',true);
+				$('#expense_category').val('');
+			}else{
+				$('#expense_category').attr('disabled',false);
+			}
+		});
+	});
+	function addData(data){
+
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/expense/addExpense/",
+             data: data,
+			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				alert("Expense Added Successfully!");
+				window.location.href='dashboard.html';
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('Something Went Wrong!');
+             }
+          });
+    }
+	function getExpenseType(){
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/expense/getExpenseType",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},	
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				expenseType = data.expenseType;
+				 if(data.expenseType.length > 0){
+					for(var key in data.expenseType) {
+						var newOptionCat = $('<option>');
+						newOptionCat.attr('value', data.expenseType[key].expense_id).text(data.expenseType[key].expense_name);
+						$('#expense_name').append(newOptionCat);
+					}
+				 }
+				
+				  
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 $("#expense_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching Expense Type list</td></tr>');
+             }
+          });
+	}
+	
+</script>
+
+</head>
+
+<body>
+
+	<div id="wrapper">
+		<header id="header" class="head-section"> </header>
+		<div id="page-wrapper" style="
+    padding-right: 50px;
+    border-right-width: 0.667;
+    margin-right: 300px;
+    margin-left: 300px;
+">
+			<div class="row">
+				<div class="col-lg-12">
+					<h1 class="page-header">Add New Expense</h1>
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">Expense Details</div>
+						<div class="panel-body" style="background:#e3e8ef">
+							<div class="row">
+								<div class="col-lg-6">
+									<form id="form" role="form">
+										
+
+										<form class="form-inline">
+                                            <div class="form-group">
+                                                <label for="exampleInputName2">Expense Category : </label> 
+                                                <select  class="form-control" name="expense_name" id="expense_name">
+                                                    <option value="none" selected>-- Select -- </option>
+												  </select>	
+												  
+												  <label for="exampleInputName2">Or Add New Category: </label> 
+												  <input	type="text" class="form-control" id="expense_category" name="expense_category"
+												  placeholder="New Expense Category">
+											</div>
+											<div class="form-group">
+													
+                                                <label for="exampleInputName2">Date : </label> 
+                                                <input type="date" class="form-control" id="date" name="date">
+											</div>
+											<div class="form-group">
+												<label for="exampleInputName2">Amount : </label> 
+												<input	type="text" class="form-control" id="amount" name="amount"
+													placeholder="Amount">
+											</div>
+											<div class="form-group">
+												<label for="exampleInputName2">Remark : </label> <input
+													type="text" class="form-control" id="remark" name="remark"
+													placeholder="Remark">
+											</div>
+											
+										</form>
+
+										<button type="submit" id="save_exp"  class="btn btn-default">Add Expense
+											</button>
+										<button type="reset" id="all_menu" class="btn btn-default">Back
+											</button>
+									</form>
+								</div>
+								<!-- /.col-lg-6 (nested) -->
+							</div>
+							<!-- /.row (nested) -->
+						</div>
+						<!-- /.panel-body -->
+					</div>
+					<!-- /.panel -->
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+		</div>
+		<!-- /#page-wrapper -->
+
+	</div>
+	<!-- /#wrapper -->
+
+</body>
+
+</html>

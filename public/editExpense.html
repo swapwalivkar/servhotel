@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<title>Modify Product</title>
+<link href="css/bootstrap.min.css" rel="stylesheet" />
+<!--  <link href="css/main-app.css" rel="stylesheet" /> -->
+<link href="css/fontawesome/fontello.css" rel="stylesheet" />
+<link href="css/jquery-ui.min.css" rel="stylesheet" />
+<link href="css/bootstrap-horizon.css" rel="stylesheet">
+<link href="css/nv.d3.min.css" rel="stylesheet">
+<link href="css/metisMenu.min.css" rel="stylesheet">
+<link href="css/sb-admin-2.css" rel="stylesheet">
+<link href="css/timeline.css" rel="stylesheet">
+<link href="css/morris.css" rel="stylesheet">
+<link href="css/fontawesome/font-awesome.min.css" rel="stylesheet"
+	type="text/css">
+
+<script type="text/javascript" src="js/libs/load.min.js"></script>
+<script type="text/javascript" src="js/libs/underscore/underscore-"></script>
+<script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="js/jquery.js"></script>
+
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+<script>
+	var host_url;
+	$(function() {
+		$('#form').on('keydown', '#amount', function(e){-1!==$.inArray(e.keyCode,[46,8,9,27,13,110,190])||(/65|67|86|88/.test(e.keyCode)&&(e.ctrlKey===true||e.metaKey===true))&&(!0===e.ctrlKey||!0===e.metaKey)||35<=e.keyCode&&40>=e.keyCode||(e.shiftKey||48>e.keyCode||57<e.keyCode)&&(96>e.keyCode||105<e.keyCode)&&e.preventDefault()});
+		if(localStorage.getItem('token') == undefined){
+			window.location.href='login.html';
+		}
+		host_url = localStorage.getItem('host-url');
+        var id = getParameterByName('id');
+        getExpenseType();
+		//setDeliveryPersons('hotel');
+		getExpenseForEdit(id);
+		
+		$('#delete_exp').click(function(e) {
+           
+            if(confirm('Are you sure you want delete this expense?')){
+                var data = {};
+                data['id'] = id;
+                data['access_token'] = localStorage.getItem('token');
+                deleteExpense(data); 
+            }else{
+                $('#delete_exp').attr('disabled',false);
+            }
+            
+        }); 
+		$('#modify_exp').click(function(e) {
+            $('#modify_exp').attr('disabled',true);
+			e.preventDefault();
+			var error = 0;
+			var contact_err = 0;
+			var data = {};
+			  for (var i = 0, ii = form.length; i < ii; ++i) {
+				var input = form[i];
+				if (input.name) {	
+					
+					if(!$.trim(input.value).length) { 
+						error++;	
+					}
+							
+				  data[input.name] = input.value;
+				}
+				
+			  }
+			data['id'] = id;
+			data['access_token'] = localStorage.getItem('token');
+			
+			if(error > 0){
+				alert('Please fill mandatory fields!');
+			}else if(contact_err > 0){
+					alert('Please Enter Valid Contact Details');
+			  }else{
+				$('#delete_exp').attr('disabled',true);
+				updateExpense(data);
+			}
+			
+			 
+		});
+		$('#expense').click(function() {
+			window.location.href='dashboard.html';	
+		});
+		var previous;
+
+		
+	});
+	function getExpenseForEdit(data){
+	 var editData = {'id':data, access_token : localStorage.getItem('token')};
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/expense/getExpenseDetails/",
+             data: editData,
+			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				$('#expense_name').val(data.expense[0].expense_name);			
+				$('#amount').val(data.expense[0].amount);
+                $('#remark').val(data.expense[0].remark);
+                var date = data.expense[0].date;
+				$("#date").val(date.slice(0,10));
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('fail' + status.code);
+             }
+          });
+    }
+	
+	function updateExpense(data){
+	 
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/expense/updateExpense/",
+             data: data,
+			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				alert("Expense Updated Successfully!");
+					window.location.href='dashboard.html';
+				
+				 
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('fail' + status.code);
+             }
+          });
+    }
+    function deleteExpense(data){
+	 
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/expense/deleteExpense/",
+             data: data,			 
+             crossDomain: true,
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				alert("Expense Deleted Successfully!");
+				window.location.href='dashboard.html'; 
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 // error handler
+                 console.log(jqXHR);
+                 alert('fail' + status.code);
+             }
+          });
+    }
+    function getExpenseType(){
+     $.ajax({
+             type: "POST",
+             url: "http://"+host_url+"/expense/getExpenseType",
+			 crossDomain: true,
+			 data: {access_token : localStorage.getItem('token')},	
+             dataType: "json",
+             success: function (data, status, jqXHR) {
+				expenseType = data.expenseType;
+				 if(data.expenseType.length > 0){
+					for(var key in data.expenseType) {
+						var newOptionCat = $('<option>');
+						newOptionCat.attr('value', data.expenseType[key].expense_id).text(data.expenseType[key].expense_name);
+						$('#expense_name').append(newOptionCat);
+					}
+				 }
+				
+				  
+             },
+
+             error: function (jqXHR, status) {
+			 
+                 $("#cust_table").find('tbody')
+					.append('<tr><td colspan="8">Error Occurred while fetching menu list</td></tr>');
+             }
+          });
+	}
+    
+    
+	function getParameterByName(name) {
+		var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+		return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+	}
+
+</script>
+
+</head>
+
+<body>
+
+	<div id="wrapper">
+		<header id="header" class="head-section"> </header>
+		<div id="page-wrapper" style="
+    padding-right: 50px;
+    border-right-width: 0.667;
+    margin-right: 300px;
+    margin-left: 300px;
+">
+			<div class="row">
+				<div class="col-lg-12">
+					<h1 class="page-header">Edit Expense</h1>
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">Expense Details</div>
+						<div class="panel-body" style="background:#e3e8ef">
+							<div class="row">
+								<div class="col-lg-6">
+									<form id="form" role="form">
+										
+
+										<form class="form-inline">
+                                            <div class="form-group">
+                                                <label for="exampleInputName2">Expense Category : </label> 
+                                                <select  class="form-control" name="expense_name" id="expense_name">
+                                                    <option value="none" selected>-- Select -- </option>
+                                                  </select>	
+											</div>
+											<div class="form-group">
+													
+                                                <label for="exampleInputName2">Date : </label> 
+                                                <input type="date" class="form-control" id="date" name="date">
+											</div>
+											<div class="form-group">
+												<label for="exampleInputName2">Amount : </label> <input
+													type="text" class="form-control" id="amount" name="amount"
+													placeholder="Amount">
+											</div>
+											<div class="form-group">
+												<label for="exampleInputName2">Remark : </label> <input
+													type="text" class="form-control" id="remark" name="remark"
+													placeholder="Remark">
+											</div>
+											
+										</form>
+
+										<button type="submit" id="modify_exp"  class="btn btn-default">Modify
+                                            </button>
+                                            <button type="submit" id="delete_exp"  class="btn btn-default">Delete
+                                                </button>
+										<button type="reset" id="expense" class="btn btn-default">Back
+											</button>
+											
+									</form>
+								</div>
+								<!-- /.col-lg-6 (nested) -->
+							</div>
+							<!-- /.row (nested) -->
+						</div>
+						<!-- /.panel-body -->
+					</div>
+					<!-- /.panel -->
+				</div>
+				<!-- /.col-lg-12 -->
+			</div>
+			<!-- /.row -->
+		</div>
+		<!-- /#page-wrapper -->
+
+	</div>
+	<!-- /#wrapper -->
+
+</body>
+
+</html>
