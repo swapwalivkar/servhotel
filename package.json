@@ -6,7 +6,7 @@
     "start": "nodemon ./bin/www"
   },
   "dependencies": {
-    "async": "1.5.2",
+    "async": "2.6.4",
     "bcryptjs": "1.1.0",
     "body-parser": "^1.17.2",
     "connect-ensure-login": "0.1.1",
